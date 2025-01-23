@@ -1,0 +1,37 @@
+const express = require("express");
+const axios = require("axios");
+const bodyparser = require("body-parser");
+const cors = require("cors");
+const connectTodb = require("./misc/db");
+const dotenv = require("dotenv");
+dotenv.config();
+
+const employeeRoute = require("./routes/employee_route");
+
+const app = express();
+
+const PORT = 5000;
+
+app.use(express.json());
+
+app.use(
+  cors({
+    origin: "*",
+  })
+);
+
+app.use(employeeRoute);
+
+app.get("/", async (req, res) => {
+  try {
+    await connectTodb();
+    console.log("Connection successful. ");
+    return res.status(200).json({ message: "connection successful" });
+  } catch (e) {
+    return res.status(500).send("couldnt connect to database");
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`server is running at port ${PORT}`);
+});
