@@ -20,12 +20,12 @@ module.exports = (sequelize, dataTypes) => {
         allowNull: false,
       },
       adhaar: {
-        type: dataTypes.BIGINT,
+        type: dataTypes.STRING,
         allowNull: false,
         unique: true,
       },
       phone: {
-        type: dataTypes.INTEGER,
+        type: dataTypes.STRING,
         allowNull: false,
         unique: true,
       },
@@ -34,7 +34,7 @@ module.exports = (sequelize, dataTypes) => {
         allowNull: false,
       },
       pincode: {
-        type: dataTypes.INTEGER,
+        type: dataTypes.STRING,
         allowNull: false,
       },
       password: {
@@ -42,6 +42,22 @@ module.exports = (sequelize, dataTypes) => {
         allowNull: false,
       },
       address: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      reffered_by: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      refferel_code: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      addedon: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      role: {
         type: dataTypes.STRING,
         allowNull: false,
       },
