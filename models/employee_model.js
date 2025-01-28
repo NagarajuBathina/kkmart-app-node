@@ -45,7 +45,7 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
-      reffered_by: {
+      joined_by: {
         type: dataTypes.STRING,
         allowNull: false,
       },
@@ -60,6 +60,26 @@ module.exports = (sequelize, dataTypes) => {
       role: {
         type: dataTypes.STRING,
         allowNull: false,
+      },
+      mma_count: {
+        type: dataTypes.INTEGER,
+      },
+      sma_count: {
+        type: dataTypes.INTEGER,
+      },
+      jma_count: {
+        type: dataTypes.INTEGER,
+      },
+      position: {
+        type: dataTypes.INTEGER,
+      },
+      status: {
+        type: dataTypes.INTEGER,
+      },
+      id: {
+        type: dataTypes.STRING,
+        allowNull: false,
+        unique: true,
       },
     },
     {
