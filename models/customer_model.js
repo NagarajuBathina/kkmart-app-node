@@ -31,8 +31,7 @@ module.exports = (sequelize, dataTypes) => {
     },
     {
       tableName: "app_customers",
-      engine: "InnoDB",
-      timestamp: false,
+      timestamps: false,
     }
   );
   return Customer;
