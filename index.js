@@ -7,6 +7,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const employeeRoute = require("./routes/employee_route");
+const levelRoute = require("./routes/level_route");
+const customerRoute = require("./routes/cutsomer_route");
 
 const app = express();
 
@@ -21,6 +23,8 @@ app.use(
 );
 
 app.use(employeeRoute);
+app.use(levelRoute);
+app.use(customerRoute);
 
 app.get("/", async (req, res) => {
   try {
