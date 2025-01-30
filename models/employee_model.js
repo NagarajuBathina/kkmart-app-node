@@ -81,6 +81,12 @@ module.exports = (sequelize, dataTypes) => {
         allowNull: false,
         unique: true,
       },
+      earnings: {
+        type: dataTypes.INTEGER,
+      },
+      deductions: {
+        type: dataTypes.INTEGER,
+      },
     },
     {
       tableName: "app_employees",

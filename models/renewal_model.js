@@ -1,6 +1,6 @@
 module.exports = (sequelize, dataTypes) => {
-  const Customer = sequelize.define(
-    "app_customers",
+  const Renewal = sequelize.define(
+    "monthly_renewals",
     {
       slno: {
         type: dataTypes.INTEGER,
@@ -9,34 +9,28 @@ module.exports = (sequelize, dataTypes) => {
       },
       name: {
         type: dataTypes.STRING,
-        allowNull: false,
       },
-      adhaar: {
-        type: dataTypes.STRING,
-        unique: true,
-      },
-      phone: {
-        type: dataTypes.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      joined_by: {
-        type: dataTypes.STRING,
+      amount: {
+        type: dataTypes.INTEGER,
         allowNull: false,
       },
       addedon: {
         type: dataTypes.STRING,
         allowNull: false,
       },
-      status: {
-        type: dataTypes.INTEGER,
+      joined_by: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      phone: {
+        type: dataTypes.STRING,
         allowNull: false,
       },
     },
     {
-      tableName: "app_customers",
+      table: "monthly_renewals",
       timestamps: false,
     }
   );
-  return Customer;
+  return Renewal;
 };
