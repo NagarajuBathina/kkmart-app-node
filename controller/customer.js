@@ -28,8 +28,7 @@ const createCustomer = async (req, res) => {
 const getCustomerDetails = async (req, res) => {
   try {
     const { Customer } = await connectTodb();
-    const { phone } = req.body;
-    const customerData = await Customer.findOne({ where: { phone } });
+    const customerData = await Customer.findOne({ where: { phone: req.params.phone } });
     if (!customerData) {
       return res.status(400).json({ error: "Customer not found" });
     }
@@ -54,10 +53,10 @@ const customerMonthlyRenewal = async (req, res) => {
     }
 
     if (customerData.joined_by != joined_by) {
-      return res.status(400).json({ error: " your can not renew this customer" });
+      return res.status(400).json({ error: "your are not allowed to renew this customer" });
     }
 
-    const payment = await Renewal.create(req.body, { transaction });
+    await Renewal.create(req.body, { transaction });
     try {
       joinedByJMAdata = await getJoinedByData(customerData.joined_by, Employee);
       const jmaEarnings = amount * 0.1;
@@ -88,7 +87,7 @@ const customerMonthlyRenewal = async (req, res) => {
     }
 
     await transaction.commit(); // Commit the transaction if all operations succeed
-    return res.status(201).json(payment);
+    return res.status(201).json({ message: "Renewal successful" });
   } catch (e) {
     await transaction.rollback(); // Rollback the transaction on any error
     return res.status(500).json({ error: e.message });

@@ -111,4 +111,25 @@ const getEmployeeDetails = async (req, res) => {
   } catch (e) {}
 };
 
-module.exports = { createEmployee, loginEmployee, getEmployeeDetails };
+const changePassword = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { currentPassword, newPassword, phone } = req.body;
+
+    const fetchUserDetails = await Employee.findOne({ where: { phone: phone } });
+    if (!fetchUserDetails) {
+      return res.status(400).json("user not found");
+    }
+
+    if (fetchUserDetails.password != currentPassword) {
+      return res.status(400).json("Incorrect password");
+    }
+
+    await Employee.update({ password: newPassword }, { where: { phone: phone } });
+    return res.status(200).json({ message: "Password Changed successfully" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
+module.exports = { createEmployee, loginEmployee, getEmployeeDetails, changePassword };

@@ -2,6 +2,7 @@ const Sequelize = require("sequelize");
 const employeeModel = require("../models/employee_model");
 const customerModel = require("../models/customer_model");
 const monthlyRenewalModel = require("../models/renewal_model");
+const withdrawalModel = require("../models/withdrawal_model");
 
 const sequelize = new Sequelize("u276789778_kk_mart", "u276789778_kk_mart", "kkmart@123@Apple", {
   dialect: "mysql",
@@ -13,8 +14,9 @@ const sequelize = new Sequelize("u276789778_kk_mart", "u276789778_kk_mart", "kkm
 const Employee = employeeModel(sequelize, Sequelize);
 const Customer = customerModel(sequelize, Sequelize);
 const Renewal = monthlyRenewalModel(sequelize, Sequelize);
+const Withdrawal = withdrawalModel(sequelize, Sequelize);
 
-const Models = { Employee, Customer, Renewal };
+const Models = { Employee, Customer, Renewal, Withdrawal };
 const connection = {};
 
 module.exports = async () => {
