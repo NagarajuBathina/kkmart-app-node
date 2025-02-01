@@ -1,5 +1,7 @@
 const { where } = require("sequelize");
+const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
+const { profile } = require("console");
 
 //create employee
 const createEmployee = async (req, res) => {
@@ -75,18 +77,16 @@ const updateRole = async (joinedBy, employee) => {
 
 //login employee
 const loginEmployee = async (req, res) => {
-  console.log(req.body);
   try {
     const { Employee } = await connectTodb();
     const { adhaar, password } = req.body;
 
     const employee = await Employee.findOne({ where: { adhaar, password } });
     if (!employee) {
-      return res.status(401).json({ error: "invalid adhaar or password" });
+      return res.status(401).json({ error: "Invalid adhaar or password" });
     }
 
-    const { password: _, ...employeeDetails } = employee.dataValues;
-    console.log(employeeDetails);
+    const { ...employeeDetails } = employee.dataValues;
     return res.status(200).json(employeeDetails);
   } catch (e) {
     res.status(500).json({ e: e.message });
@@ -95,7 +95,6 @@ const loginEmployee = async (req, res) => {
 
 // get employee details
 const getEmployeeDetails = async (req, res) => {
-  console.log(req.body);
   try {
     const { Employee } = await connectTodb();
     const { adhaar } = req.body;
@@ -105,24 +104,25 @@ const getEmployeeDetails = async (req, res) => {
       return res.status(401).json({ error: "wrong adhaar" });
     }
 
-    const { password: _, ...employeeDetails } = employee.dataValues;
-    console.log(employeeDetails);
+    const { ...employeeDetails } = employee.dataValues;
     return res.status(200).json(employeeDetails);
   } catch (e) {}
 };
 
+// change password
 const changePassword = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
     const { currentPassword, newPassword, phone } = req.body;
 
-    const fetchUserDetails = await Employee.findOne({ where: { phone: phone } });
+    const employee = await Employee.findOne({ where: { phone: phone } });
+    const { ...fetchUserDetails } = employee.dataValues;
     if (!fetchUserDetails) {
-      return res.status(400).json("user not found");
+      return res.status(400).json({ error: "user not found" });
     }
 
     if (fetchUserDetails.password != currentPassword) {
-      return res.status(400).json("Incorrect password");
+      return res.status(400).json({ error: "Incorrect password" });
     }
 
     await Employee.update({ password: newPassword }, { where: { phone: phone } });
@@ -132,4 +132,44 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { createEmployee, loginEmployee, getEmployeeDetails, changePassword };
+// upload profile
+const uploadProfile = async (req, res) => {
+  const { Employee } = await connectTodb();
+  const { phone } = req.body;
+
+  console.log(req.body);
+
+  try {
+    const checkUser = await Employee.findOne({ where: { phone: phone } });
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    if (!checkUser) {
+      return res.status(400).json({ error: "user not found" });
+    }
+
+    let profileBase64 = null;
+    if (req.file) {
+      const fileData = await fs.readFile(req.file.path);
+      profileBase64 = `data:${req.file.mimetype};base64,${fileData.toString("base64")}`;
+
+      await fs.unlink(req.file.path).catch(console.error);
+    }
+
+    if (profileBase64) {
+      await Employee.update({ profile: profileBase64 }, { where: { phone: phone } });
+      return res.status(200).json({ message: "Profile Updated", data: profileBase64 });
+    } else {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+  } catch (e) {
+    if (req.file) {
+      await fs.unlink(req.file.path).catch(console.error);
+    }
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+module.exports = { createEmployee, loginEmployee, getEmployeeDetails, changePassword, uploadProfile };

@@ -87,6 +87,9 @@ module.exports = (sequelize, dataTypes) => {
       deductions: {
         type: dataTypes.INTEGER,
       },
+      profile: {
+        type: dataTypes.TEXT("long"),
+      },
     },
     {
       tableName: "app_employees",

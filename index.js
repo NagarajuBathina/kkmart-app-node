@@ -28,6 +28,8 @@ app.use(levelRoute);
 app.use(customerRoute);
 app.use(withdrawalRoute);
 
+app.use("/uploads", express.static("uploads"));
+
 app.get("/", async (req, res) => {
   try {
     await connectTodb();
