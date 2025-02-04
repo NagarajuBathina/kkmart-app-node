@@ -36,7 +36,10 @@ const getWithdrawls = async (req, res) => {
   try {
     const { Withdrawal } = await connectTodb();
 
-    const getAllWithdrawlDetails = await Withdrawal.findAll({ where: { phone: req.params.phone } });
+    const getAllWithdrawlDetails = await Withdrawal.findAll({
+      where: { phone: req.params.phone },
+      order: [["addedon", "DESC"]],
+    });
     if (!getAllWithdrawlDetails) {
       return res.status(400).json("No data found");
     }

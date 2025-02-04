@@ -1,7 +1,6 @@
 const { where } = require("sequelize");
 const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
-const { profile } = require("console");
 
 //create employee
 const createEmployee = async (req, res) => {

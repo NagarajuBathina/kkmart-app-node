@@ -6,8 +6,6 @@ const getMMAlist = async (req, res) => {
     const { Employee } = await connectTodb();
     const { refferal_code, role } = req.body;
 
-    console.log(`############################`, refferal_code);
-
     const fetchedData = await Employee.findAll({
       where: {
         joined_by: refferal_code,
