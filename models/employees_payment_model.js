@@ -1,6 +1,6 @@
 module.exports = (sequelize, dataTypes) => {
-  const Renewal = sequelize.define(
-    "monthly_renewals",
+  const EmployeePayment = sequelize.define(
+    "app_employees_payments",
     {
       slno: {
         type: dataTypes.INTEGER,
@@ -30,15 +30,15 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
-      status: {
+      payment_status: {
         type: dataTypes.STRING,
         allowNull: false,
       },
     },
     {
-      table: "monthly_renewals",
+      table: "app_employees_payments",
       timestamps: false,
     }
   );
-  return Renewal;
+  return EmployeePayment;
 };

@@ -4,11 +4,88 @@ const connectTodb = require("../misc/db");
 
 //create employee
 const createEmployee = async (req, res) => {
+  const { sequelize } = await connectTodb();
+  const transaction = await sequelize.transaction();
   try {
-    const { Employee } = await connectTodb();
-    let { adhaar, phone, joined_by, role } = req.body;
-    console.log(role);
+    const { Employee, EmployeePayment } = await connectTodb();
+    let {
+      joined_by,
+      role,
+      //payment details
+      amount,
+      payment_status,
+      transaction_id,
+    } = req.body;
 
+    const checkJoindedBy = await Employee.findOne({ where: { refferel_code: joined_by } });
+
+    const { ...joinedbyDetails } = checkJoindedBy.dataValues;
+    let newEmployee;
+
+    if (role === "mma" && (joinedbyDetails.role !== "sma" || joinedbyDetails !== "jma")) {
+      req.body.position = 1 + (joinedbyDetails.mma_count || 0);
+      newEmployee = await Employee.create(req.body, { transaction });
+      await Employee.update(
+        { mma_count: (joinedbyDetails.mma_count || 0) + 1 },
+        { where: { refferel_code: joined_by }, transaction }
+      );
+      await updateRole(joined_by, Employee, transaction);
+    } else if (role === "jma" && joinedbyDetails.role === "sma") {
+      req.body.position = 1 + (joinedbyDetails.jma_count || 0);
+      newEmployee = await Employee.create(req.body, { transaction });
+      await Employee.update(
+        { jma_count: (joinedbyDetails.jma_count || 0) + 1 },
+        { where: { refferel_code: joined_by }, transaction }
+      );
+    } else if (role === "sma" && joinedbyDetails.role !== "jma") {
+      req.body.position = 1 + (joinedbyDetails.sma_count || 0);
+      newEmployee = await Employee.create(req.body, { transaction });
+      await Employee.update(
+        { sma_count: (joinedbyDetails.sma_count || 0) + 1 },
+        { where: { refferel_code: joined_by }, transaction }
+      );
+    }
+
+    if (newEmployee) {
+      await EmployeePayment.create(
+        {
+          name: newEmployee.name,
+          addedon: newEmployee.addedon,
+          joined_by: newEmployee.joined_by,
+          phone: newEmployee.phone,
+          payment_status,
+          transaction_id,
+          amount,
+        },
+        { transaction }
+      );
+    }
+    await transaction.commit();
+    return res.status(201).json({ success: true, employee: newEmployee });
+  } catch (e) {
+    await transaction.rollback();
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const updateRole = async (joinedBy, employee, transaction) => {
+  const checkJoindedBy = await employee.findOne({ where: { refferel_code: joinedBy } });
+  const { ...joinedbyDetails } = checkJoindedBy.dataValues;
+  if (joinedbyDetails.mma_count === 5) {
+    await employee.update({ role: "dmh" }, { where: { refferel_code: joinedBy } }, { transaction });
+  } else if (joinedbyDetails.mma_count === 30) {
+    await employee.update({ role: "zmh" }, { where: { refferel_code: joinedBy } }, { transaction });
+  } else if (joinedbyDetails.mma_count === 105) {
+    await employee.update({ role: "smh" }, { where: { refferel_code: joinedBy } }, { transaction });
+  }
+};
+
+// check refferal code , phone , adhaar before creating user
+const checkUserDetailsBeforeCreating = async (req, res) => {
+  const { Employee } = await connectTodb();
+  try {
+    let { adhaar, phone, joined_by, role } = req.body;
     const existingAdhaar = await Employee.findOne({ where: { adhaar } });
     if (existingAdhaar) {
       console.log("Aadhaar already exists:", adhaar);
@@ -16,7 +93,6 @@ const createEmployee = async (req, res) => {
     }
     const existingPhone = await Employee.findOne({ where: { phone } });
     if (existingPhone) {
-      console.log("Phone already exists:", phone);
       return res.status(400).json({ error: "Phone already exists." });
     }
 
@@ -24,53 +100,28 @@ const createEmployee = async (req, res) => {
     if (!checkJoindedBy) {
       return res.status(400).json({ error: "Invalid refferel id" });
     }
-
     const { ...joinedbyDetails } = checkJoindedBy.dataValues;
-    console.log(joinedbyDetails);
-    let newEmployee;
 
     if (role === "mma" && (joinedbyDetails.role !== "sma" || joinedbyDetails !== "jma")) {
-      req.body.position = 1 + (joinedbyDetails.mma_count || 0);
-      newEmployee = await Employee.create(req.body);
-      await Employee.update(
-        { mma_count: (joinedbyDetails.mma_count || 0) + 1 },
-        { where: { refferel_code: joined_by } }
-      );
-      await updateRole(joined_by, Employee);
+      return res.status(200).json({
+        success: true,
+        message: "All validations passed",
+      });
     } else if (role === "jma" && joinedbyDetails.role === "sma") {
-      req.body.position = 1 + (joinedbyDetails.jma_count || 0);
-      newEmployee = await Employee.create(req.body);
-      await Employee.update(
-        { jma_count: (joinedbyDetails.jma_count || 0) + 1 },
-        { where: { refferel_code: joined_by } }
-      );
+      return res.status(200).json({
+        success: true,
+        message: "All validations passed",
+      });
     } else if (role === "sma" && joinedbyDetails.role !== "jma") {
-      req.body.position = 1 + (joinedbyDetails.sma_count || 0);
-      newEmployee = await Employee.create(req.body);
-      await Employee.update(
-        { sma_count: (joinedbyDetails.sma_count || 0) + 1 },
-        { where: { refferel_code: joined_by } }
-      );
+      return res.status(200).json({
+        success: true,
+        message: "All validations passed",
+      });
     } else {
       return res.status(400).json({ error: "User can't be joined under this referral id" });
     }
-
-    return res.status(201).json({ success: true, employee: newEmployee });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message });
-  }
-};
-
-const updateRole = async (joinedBy, employee) => {
-  const checkJoindedBy = await employee.findOne({ where: { refferel_code: joinedBy } });
-  const { ...joinedbyDetails } = checkJoindedBy.dataValues;
-  if (joinedbyDetails.mma_count === 5) {
-    await employee.update({ role: "dmh" }, { where: { refferel_code: joinedBy } });
-  } else if (joinedbyDetails.mma_count === 30) {
-    await employee.update({ role: "zmh" }, { where: { refferel_code: joinedBy } });
-  } else if (joinedbyDetails.mma_count === 105) {
-    await employee.update({ role: "smh" }, { where: { refferel_code: joinedBy } });
+    return res.status(500).json({ error: e.message });
   }
 };
 
@@ -171,4 +222,11 @@ const uploadProfile = async (req, res) => {
   }
 };
 
-module.exports = { createEmployee, loginEmployee, getEmployeeDetails, changePassword, uploadProfile };
+module.exports = {
+  createEmployee,
+  checkUserDetailsBeforeCreating,
+  loginEmployee,
+  getEmployeeDetails,
+  changePassword,
+  uploadProfile,
+};
