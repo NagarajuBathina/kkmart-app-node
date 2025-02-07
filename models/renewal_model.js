@@ -30,7 +30,7 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
-      status: {
+      payment_status: {
         type: dataTypes.STRING,
         allowNull: false,
       },

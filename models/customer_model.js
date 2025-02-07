@@ -11,10 +11,6 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
-      adhaar: {
-        type: dataTypes.STRING,
-        unique: true,
-      },
       phone: {
         type: dataTypes.STRING,
         allowNull: false,
@@ -31,6 +27,11 @@ module.exports = (sequelize, dataTypes) => {
       status: {
         type: dataTypes.INTEGER,
         allowNull: false,
+      },
+      smart_card_number: {
+        type: dataTypes.STRING,
+        allowNull: false,
+        unique: true,
       },
     },
     {

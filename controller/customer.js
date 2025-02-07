@@ -1,26 +1,76 @@
 const connectTodb = require("../misc/db");
 
-// create customer
-const createCustomer = async (req, res) => {
+//validate before creating customer
+const validateBeforeCreatingCustomer = async (req, res) => {
   try {
     const { Customer } = await connectTodb();
-    let { phone, adhaar } = req.body;
-    console.log(req.body);
-
-    const existingAdhaar = await Customer.findOne({ where: { adhaar } });
-    if (existingAdhaar) {
-      return res.status(400).json({ error: "Customer already exists" });
-    }
-
+    const { phone } = req.body;
     const exitstingPhone = await Customer.findOne({ where: { phone } });
     if (exitstingPhone) {
       return res.status(400).json({ error: "Phone number already exists" });
     }
 
-    await Customer.create(req.body);
-    return res.status(201).json({ message: "Created successfully" });
+    return res.status(200).json({ success: true });
   } catch (e) {
     return res.status(500).json({ error: e.message });
+  }
+};
+
+// create customer
+const createCustomer = async (req, res) => {
+  const { sequelize } = await connectTodb();
+  const transaction = await sequelize.transaction();
+  try {
+    const { Customer, Renewal } = await connectTodb();
+    let { amount, joined_by } = req.body;
+
+    // Create customer
+    await Customer.create(req.body, { transaction });
+
+    // Create renewal record
+    await Renewal.create(req.body, { transaction });
+
+    // Process earnings distribution
+    try {
+      await processEarnings(joined_by, amount, transaction);
+    } catch (error) {
+      await transaction.rollback();
+      return res.status(400).json({ error: error.message });
+    }
+
+    await transaction.commit();
+    return res.status(201).json({
+      success: true,
+      message: "Customer created successfully",
+    });
+  } catch (e) {
+    await transaction.rollback();
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+// Helper function to process earnings
+const processEarnings = async (joined_by, amount, transaction) => {
+  const { Employee } = await connectTodb();
+
+  const joinedByJMAdata = await getJoinedByData(joined_by, Employee);
+  const jmaEarnings = amount * 0.1;
+  await updateData(joinedByJMAdata.id, jmaEarnings, Employee, transaction);
+
+  if (joinedByJMAdata.joined_by) {
+    const joinedBySMAdata = await getJoinedByData(joinedByJMAdata.joined_by, Employee);
+    if (joinedByJMAdata.position <= 8) {
+      const smaEarnings = amount * 0.05;
+      await updateData(joinedBySMAdata.id, smaEarnings, Employee, transaction);
+    }
+
+    if (joinedBySMAdata.joined_by) {
+      const joinedByMMAdata = await getJoinedByData(joinedBySMAdata.joined_by, Employee);
+      if (joinedBySMAdata.position <= 7) {
+        const mmaEarnings = amount * 0.02;
+        await updateData(joinedByMMAdata.id, mmaEarnings, Employee, transaction);
+      }
+    }
   }
 };
 
@@ -116,4 +166,4 @@ const updateData = async (id, amount, employee, transaction) => {
   return fetchedDetails;
 };
 
-module.exports = { createCustomer, getCustomerDetails, customerMonthlyRenewal };
+module.exports = { createCustomer, getCustomerDetails, customerMonthlyRenewal, validateBeforeCreatingCustomer };
