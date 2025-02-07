@@ -91,6 +91,11 @@ const getDetailsOfJMAandCustomers = async (req, res) => {
         });
         allCustomerData = [...allCustomerData, ...customerList];
       }
+    } else {
+      const customerList = await Customer.findAll({
+        where: { joined_by: req.params.refferalCode },
+      });
+      allCustomerData = [...allCustomerData, ...customerList];
     }
     return res.status(200).json({
       data: {
