@@ -222,6 +222,21 @@ const uploadProfile = async (req, res) => {
   }
 };
 
+// store base64 text for profile
+const storeBase64ForProfile = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { profile } = req.body;
+    const updateProfile = await Employee.update({ profile: profile }, { where: { slno: req.params.slno } });
+    if (!updateProfile) {
+      return res.status(400).json("not updated");
+    }
+    return res.status(200).json({ statusCode: 200 });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = {
   createEmployee,
   checkUserDetailsBeforeCreating,
@@ -229,4 +244,5 @@ module.exports = {
   getEmployeeDetails,
   changePassword,
   uploadProfile,
+  storeBase64ForProfile,
 };

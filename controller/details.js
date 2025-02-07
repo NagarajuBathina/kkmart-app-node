@@ -30,7 +30,8 @@ const getDetailsOfJMAandCustomers = async (req, res) => {
     let allCustomerData = [];
     let smaList = [];
     let jmaList = [];
-    let customerList = [];
+
+    // Get MMA list
     const mmaList = await Employee.findAll({
       where: {
         [Op.and]: [
@@ -40,46 +41,57 @@ const getDetailsOfJMAandCustomers = async (req, res) => {
       },
     });
 
-    if (!mmaList || mmaList.length === 0) {
-      return res.status(400).json("No MMA data available");
+    // Store MMA data if available
+    if (mmaList && mmaList.length > 0) {
+      allMMAandAboveRolesData = [...mmaList];
     }
-    allMMAandAboveRolesData = [...allMMAandAboveRolesData, ...mmaList];
 
+    // Get unique SMAs using Set
     const smaSet = new Set();
-    for (const mma of mmaList) {
-      smaList = await Employee.findAll({
+    // If MMA list exists, get their SMAs
+    if (mmaList && mmaList.length > 0) {
+      for (const mma of mmaList) {
+        smaList = await Employee.findAll({
+          where: {
+            [Op.and]: [
+              { role: "sma" },
+              {
+                [Op.or]: [{ joined_by: mma.dataValues.refferel_code }, { joined_by: req.params.refferalCode }],
+              },
+            ],
+          },
+        });
+        smaList.forEach((sma) => smaSet.add(JSON.stringify(sma)));
+      }
+    } else {
+      // If no MMAs, try to get SMAs directly
+      const directSmaList = await Employee.findAll({
         where: {
-          [Op.and]: [
-            { role: "sma" },
-            {
-              [Op.or]: [{ joined_by: mma.dataValues.refferel_code }, { joined_by: req.params.refferalCode }],
-            },
-          ],
+          role: "sma",
+          joined_by: req.params.refferalCode,
         },
       });
-      smaList.forEach((sma) => smaSet.add(JSON.stringify(sma)));
+      directSmaList.forEach((sma) => smaSet.add(JSON.stringify(sma)));
+    }
+    allSMAdata = Array.from(smaSet).map((sma) => JSON.parse(sma));
 
-      allSMAdata = Array.from(smaSet).map((sma) => JSON.parse(sma));
+    // Get JMAs for all SMAs if SMAs exist
+    if (allSMAdata.length > 0) {
+      for (const sma of smaList) {
+        jmaList = await Employee.findAll({ where: { joined_by: sma.dataValues.refferel_code, role: "jma" } });
+        allJMAdata = [...allJMAdata, ...jmaList];
+      }
     }
 
-    for (const sma of smaList) {
-      jmaList = await Employee.findAll({ where: { joined_by: sma.dataValues.refferel_code, role: "jma" } });
-      allJMAdata = [...allJMAdata, ...jmaList];
+    // Get customers for all JMAs if JMAs exist
+    if (allJMAdata.length > 0) {
+      for (const jma of allJMAdata) {
+        const customerList = await Customer.findAll({
+          where: { joined_by: jma.refferel_code },
+        });
+        allCustomerData = [...allCustomerData, ...customerList];
+      }
     }
-
-    if (allJMAdata.length === 0) {
-      return res.status(400).json("No JMA data available");
-    }
-
-    for (const jma of allJMAdata) {
-      customerList = await Customer.findAll({ where: { joined_by: jma.dataValues.refferel_code } });
-      allCustomerData = [...customerList];
-    }
-
-    if (allCustomerData.length === 0) {
-      return res.status(400).json("No customer data available");
-    }
-
     return res.status(200).json({
       data: {
         mmaData: allMMAandAboveRolesData,
@@ -127,8 +139,13 @@ const getCustomersDetails = async (req, res) => {
 
     return res.status(200).json({ data: fetchedData });
   } catch (e) {
-    console.error(e);
     return res.status(500).json({ error: e.message });
   }
 };
-module.exports = { getDetailsByRole, getDetailsOfJMAandCustomers, getCustomersDetails, getCustomersDetailsBySMArole };
+
+module.exports = {
+  getDetailsByRole,
+  getDetailsOfJMAandCustomers,
+  getCustomersDetails,
+  getCustomersDetailsBySMArole,
+};
