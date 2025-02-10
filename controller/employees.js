@@ -6,30 +6,47 @@ const connectTodb = require("../misc/db");
 const createEmployee = async (req, res) => {
   const { sequelize } = await connectTodb();
   const transaction = await sequelize.transaction();
+
   try {
     const { Employee, EmployeePayment } = await connectTodb();
-    let {
-      joined_by,
-      role,
-      //payment details
-      amount,
-      payment_status,
-      transaction_id,
-    } = req.body;
+    let { joined_by, role, amount, payment_status, transaction_id } = req.body;
 
-    const checkJoindedBy = await Employee.findOne({ where: { refferel_code: joined_by } });
+    const checkJoindedBy = await Employee.findOne({
+      where: { refferel_code: joined_by },
+      transaction,
+    });
+
+    if (!checkJoindedBy) {
+      await transaction.rollback();
+      return res.status(400).json({ error: "Invalid referral code" });
+    }
 
     const { ...joinedbyDetails } = checkJoindedBy.dataValues;
     let newEmployee;
 
-    if (role === "mma" && (joinedbyDetails.role !== "sma" || joinedbyDetails !== "jma")) {
-      req.body.position = 1 + (joinedbyDetails.mma_count || 0);
+    if (
+      role === "mma" ||
+      role === "zmh" ||
+      role === "dmh" ||
+      (role === "smh" && (joinedbyDetails.role !== "sma" || joinedbyDetails !== "jma"))
+    ) {
+      const newMmaCount = (joinedbyDetails.mma_count || 0) + 1;
+      req.body.position = newMmaCount;
+
+      // Create new employee first
       newEmployee = await Employee.create(req.body, { transaction });
-      await Employee.update(
-        { mma_count: (joinedbyDetails.mma_count || 0) + 1 },
-        { where: { refferel_code: joined_by }, transaction }
-      );
-      await updateRole(joined_by, Employee, transaction);
+
+      // Update MMA count
+      await Employee.update({ mma_count: newMmaCount }, { where: { refferel_code: joined_by }, transaction });
+
+      // Update role based on new count
+      if (newMmaCount === 5) {
+        await Employee.update({ role: "dmh" }, { where: { refferel_code: joined_by }, transaction });
+      } else if (newMmaCount === 30) {
+        await Employee.update({ role: "zmh" }, { where: { refferel_code: joined_by }, transaction });
+      } else if (newMmaCount === 105) {
+        await Employee.update({ role: "smh" }, { where: { refferel_code: joined_by }, transaction });
+      }
     } else if (role === "jma" && joinedbyDetails.role === "sma") {
       req.body.position = 1 + (joinedbyDetails.jma_count || 0);
       newEmployee = await Employee.create(req.body, { transaction });
@@ -44,6 +61,9 @@ const createEmployee = async (req, res) => {
         { sma_count: (joinedbyDetails.sma_count || 0) + 1 },
         { where: { refferel_code: joined_by }, transaction }
       );
+    } else {
+      await transaction.rollback();
+      return res.status(400).json({ error: "Invalid role hierarchy" });
     }
 
     if (newEmployee) {
@@ -60,26 +80,42 @@ const createEmployee = async (req, res) => {
         { transaction }
       );
     }
+
     await transaction.commit();
-    return res.status(201).json({ success: true, employee: newEmployee });
+    return res.status(201).json({
+      success: true,
+      message: "Employee created successfully",
+      employee: newEmployee,
+    });
   } catch (e) {
     await transaction.rollback();
     console.error(e);
-    res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: e.message });
   }
 };
 
-const updateRole = async (joinedBy, employee, transaction) => {
-  const checkJoindedBy = await employee.findOne({ where: { refferel_code: joinedBy } });
-  const { ...joinedbyDetails } = checkJoindedBy.dataValues;
-  if (joinedbyDetails.mma_count === 5) {
-    await employee.update({ role: "dmh" }, { where: { refferel_code: joinedBy } }, { transaction });
-  } else if (joinedbyDetails.mma_count === 30) {
-    await employee.update({ role: "zmh" }, { where: { refferel_code: joinedBy } }, { transaction });
-  } else if (joinedbyDetails.mma_count === 105) {
-    await employee.update({ role: "smh" }, { where: { refferel_code: joinedBy } }, { transaction });
-  }
-};
+// const updateRole = async (joinedBy, employee, transaction) => {
+//   console.log(joinedBy);
+//   const checkJoindedBy = await employee.findOne({
+//     where: { refferel_code: joinedBy },
+//     transaction,
+//   });
+
+//   console.log(checkJoindedBy);
+
+//   // Get the current count after the increment
+//   const currentMMaCount = checkJoindedBy.dataValues.mma_count + 1;
+
+//   console.log(currentMMaCount);
+
+//   if (currentMMaCount === 5) {
+//     await employee.update({ role: "dmh" }, { where: { refferel_code: joinedBy }, transaction });
+//   } else if (currentMMaCount === 30) {
+//     await employee.update({ role: "zmh" }, { where: { refferel_code: joinedBy }, transaction });
+//   } else if (currentMMaCount === 105) {
+//     await employee.update({ role: "smh" }, { where: { refferel_code: joinedBy }, transaction });
+//   }
+// };
 
 // check refferal code , phone , adhaar before creating user
 const checkUserDetailsBeforeCreating = async (req, res) => {
