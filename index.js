@@ -14,7 +14,7 @@ const detailsRoute = require("./routes/details_route");
 
 const app = express();
 
-const PORT = 1000;
+const PORT = 1431;
 
 app.use(express.json());
 
