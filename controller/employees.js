@@ -187,8 +187,6 @@ const uploadProfile = async (req, res) => {
   const { Employee } = await connectTodb();
   const { phone } = req.body;
 
-  console.log(req.body);
-
   try {
     const checkUser = await Employee.findOne({ where: { phone: phone } });
 

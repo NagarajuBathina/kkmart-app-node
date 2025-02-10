@@ -11,6 +11,7 @@ const levelRoute = require("./routes/level_route");
 const customerRoute = require("./routes/cutsomer_route");
 const withdrawalRoute = require("./routes/withdrawal_route");
 const detailsRoute = require("./routes/details_route");
+const adminRoute = require("./routes/admin_route");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use(levelRoute);
 app.use(customerRoute);
 app.use(withdrawalRoute);
 app.use(detailsRoute);
+app.use(adminRoute);
 
 app.use("/uploads", express.static("uploads"));
 

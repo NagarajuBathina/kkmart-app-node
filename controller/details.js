@@ -123,7 +123,8 @@ const getCustomersDetailsBySMArole = async (req, res) => {
     }
     res.status(200).json({ data: { customerdata: allCustomerData, jmadata: jmaList } });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    // res.status(500).json({ error: e.message });
+    console.log(e);
   }
 };
 
