@@ -33,6 +33,14 @@ module.exports = (sequelize, dataTypes) => {
         allowNull: false,
         unique: true,
       },
+      adhaar: {
+        type: dataTypes.STRING,
+        unique: true,
+        allowNull: false,
+      },
+      profile: {
+        type: dataTypes.TEXT("long"),
+      },
     },
     {
       tableName: "app_customers",

@@ -70,6 +70,9 @@ module.exports = (sequelize, dataTypes) => {
       jma_count: {
         type: dataTypes.INTEGER,
       },
+      customer_count: {
+        type: dataTypes.INTEGER,
+      },
       position: {
         type: dataTypes.INTEGER,
       },

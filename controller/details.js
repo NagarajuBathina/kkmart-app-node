@@ -77,8 +77,8 @@ const getDetailsOfJMAandCustomers = async (req, res) => {
 
     // Get JMAs for all SMAs if SMAs exist
     if (allSMAdata.length > 0) {
-      for (const sma of smaList) {
-        jmaList = await Employee.findAll({ where: { joined_by: sma.dataValues.refferel_code, role: "jma" } });
+      for (const sma of allSMAdata) {
+        jmaList = await Employee.findAll({ where: { joined_by: sma.refferel_code, role: "jma" } });
         allJMAdata = [...allJMAdata, ...jmaList];
       }
     }
@@ -106,7 +106,7 @@ const getDetailsOfJMAandCustomers = async (req, res) => {
 };
 
 const getCustomersDetailsBySMArole = async (req, res) => {
-  try { 
+  try {
     const { Employee, Customer } = await connectTodb();
     const jmaList = await Employee.findAll({ where: { joined_by: req.params.refferalCode, role: "jma" } });
     if (jmaList.length === 0 || !jmaList) {

@@ -9,6 +9,12 @@ const sequelize = new Sequelize("u276789778_kk_mart", "u276789778_kk_mart", "kkm
   host: "62.72.28.52",
   port: 3306,
   logging: false,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000,
+  },
 });
 
 const Employee = employeeModel(sequelize, Sequelize);

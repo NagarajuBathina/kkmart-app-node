@@ -1,28 +1,40 @@
+const { where } = require("sequelize");
+const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
 
 //validate before creating customer
 const validateBeforeCreatingCustomer = async (req, res) => {
   try {
     const { Customer } = await connectTodb();
-    const { phone } = req.body;
+    const { phone, adhaar, smart_card_number } = req.body;
+    console.log(req.body);
     const exitstingPhone = await Customer.findOne({ where: { phone } });
     if (exitstingPhone) {
       return res.status(400).json({ error: "Phone number already exists" });
     }
 
+    const exitstingAdhaar = await Customer.findOne({ where: { adhaar } });
+    if (exitstingAdhaar) {
+      return res.status(400).json({ error: "Adhaar number already exists" });
+    }
+
+    const exitstingSmartCard = await Customer.findOne({ where: { smart_card_number } });
+    if (exitstingSmartCard) {
+      return res.status(400).json({ error: "Smart card already exists" });
+    }
     return res.status(200).json({ success: true });
   } catch (e) {
+    console.log(e);
     return res.status(500).json({ error: e.message });
   }
 };
 
 // create customer
 const createCustomer = async (req, res) => {
-  const { sequelize } = await connectTodb();
+  const { sequelize, Customer, Renewal, Employee } = await connectTodb();
   const transaction = await sequelize.transaction();
   try {
-    const { Customer, Renewal } = await connectTodb();
-    let { amount, joined_by } = req.body;
+    let { joined_by } = req.body;
 
     // Create customer
     await Customer.create(req.body, { transaction });
@@ -32,7 +44,7 @@ const createCustomer = async (req, res) => {
 
     // Process earnings distribution
     try {
-      await processEarnings(joined_by, amount, transaction);
+      await processEarnings(joined_by, Employee, transaction);
     } catch (error) {
       await transaction.rollback();
       return res.status(400).json({ error: error.message });
@@ -44,33 +56,58 @@ const createCustomer = async (req, res) => {
       message: "Customer created successfully",
     });
   } catch (e) {
-    await transaction.rollback();
+    if (transaction && !transaction.finished) {
+      await transaction.rollback();
+    }
     return res.status(500).json({ error: e.message });
   }
 };
 
 // Helper function to process earnings
-const processEarnings = async (joined_by, amount, transaction) => {
-  const { Employee } = await connectTodb();
+const processEarnings = async (joined_by, Employee, transaction) => {
+  const joinedByJMAdata = await fetchJoinedByData(joined_by, Employee);
+  const jmaEarnings = 50;
 
-  const joinedByJMAdata = await getJoinedByData(joined_by, Employee);
-  const jmaEarnings = amount * 0.1;
   await updateData(joinedByJMAdata.id, jmaEarnings, Employee, transaction);
+  await Employee.update(
+    { customer_count: joinedByJMAdata.customer_count + 1 },
+    { where: { phone: joinedByJMAdata.phone }, transaction }
+  );
 
-  if (joinedByJMAdata.joined_by) {
-    const joinedBySMAdata = await getJoinedByData(joinedByJMAdata.joined_by, Employee);
-    if (joinedByJMAdata.position <= 8) {
-      const smaEarnings = amount * 0.05;
-      await updateData(joinedBySMAdata.id, smaEarnings, Employee, transaction);
-    }
+  const joinedBySMAdata = await fetchJoinedByData(joinedByJMAdata.joined_by, Employee);
+  if (joinedByJMAdata.position <= 8) {
+    const smaEarnings = 20;
 
-    if (joinedBySMAdata.joined_by) {
-      const joinedByMMAdata = await getJoinedByData(joinedBySMAdata.joined_by, Employee);
-      if (joinedBySMAdata.position <= 7) {
-        const mmaEarnings = amount * 0.02;
-        await updateData(joinedByMMAdata.id, mmaEarnings, Employee, transaction);
-      }
+    await updateData(joinedBySMAdata.id, smaEarnings, Employee, transaction);
+    await Employee.update(
+      { customer_count: joinedBySMAdata.customer_count + 1 },
+      { where: { phone: joinedBySMAdata.phone }, transaction }
+    );
+  }
+
+  const joinedByMMAdata = await fetchJoinedByData(joinedBySMAdata.joined_by, Employee);
+  try {
+    if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count === 0) {
+      const mmaEarnings = 10;
+
+      await updateData(joinedByMMAdata.id, mmaEarnings, Employee, transaction);
+      await Employee.update(
+        { customer_count: joinedByMMAdata.customer_count + 1 },
+        { where: { phone: joinedByMMAdata.phone }, transaction }
+      );
+    } else if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count > 0) {
+      const mmaEarnings = 5;
+
+      await updateData(joinedByMMAdata.id, mmaEarnings, Employee, transaction);
+      await Employee.update(
+        { customer_count: joinedByMMAdata.customer_count + 1 },
+        { where: { phone: joinedByMMAdata.phone }, transaction }
+      );
     }
+  } catch (error) {
+    console.error("Error updating earnings:", error);
+    await transaction.rollback();
+    throw error;
   }
 };
 
@@ -108,7 +145,7 @@ const customerMonthlyRenewal = async (req, res) => {
 
     await Renewal.create(req.body, { transaction });
     try {
-      joinedByJMAdata = await getJoinedByData(customerData.joined_by, Employee);
+      joinedByJMAdata = await fetchJoinedByData(customerData.joined_by, Employee);
       const jmaEarnings = amount * 0.1;
       await updateData(joinedByJMAdata.id, jmaEarnings, Employee, transaction);
     } catch (error) {
@@ -117,7 +154,7 @@ const customerMonthlyRenewal = async (req, res) => {
     }
 
     if (joinedByJMAdata.joined_by != "") {
-      joinedBySMAdata = await getJoinedByData(joinedByJMAdata.joined_by, Employee);
+      joinedBySMAdata = await fetchJoinedByData(joinedByJMAdata.joined_by, Employee);
       if (joinedByJMAdata.position > 8) {
         console.log("JMA position not in range, commission not adding to SMA");
       } else {
@@ -127,7 +164,7 @@ const customerMonthlyRenewal = async (req, res) => {
     }
 
     if (joinedBySMAdata && joinedBySMAdata.joined_by != "") {
-      joinedByMMAdata = await getJoinedByData(joinedBySMAdata.joined_by, Employee);
+      joinedByMMAdata = await fetchJoinedByData(joinedBySMAdata.joined_by, Employee);
       if (joinedBySMAdata.position > 7) {
         console.log("SMA position not in range, commission not adding to MMA");
       } else {
@@ -144,7 +181,7 @@ const customerMonthlyRenewal = async (req, res) => {
   }
 };
 
-const getJoinedByData = async (joinedBy, employee) => {
+const fetchJoinedByData = async (joinedBy, employee) => {
   const checkJoindedBy = await employee.findOne({ where: { refferel_code: joinedBy } });
   if (!checkJoindedBy) {
     throw new Error("Joined by data not found");
@@ -154,16 +191,76 @@ const getJoinedByData = async (joinedBy, employee) => {
 };
 
 const updateData = async (id, amount, employee, transaction) => {
-  const checkID = await employee.findOne({ where: { id: id }, transaction });
-  if (!checkID) {
-    throw new Error("id not found");
+  try {
+    const checkID = await employee.findOne({ where: { id: id }, transaction });
+    if (!checkID) {
+      throw new Error("ID not found");
+    }
+    const { earnings } = checkID.dataValues;
+    const newEarnings = earnings + amount;
+    await employee.update({ earnings: newEarnings }, { where: { id: checkID.dataValues.id }, transaction });
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
   }
-  const { ...fetchedDetails } = checkID.dataValues;
-  await employee.update(
-    { earnings: fetchedDetails.earnings + amount },
-    { where: { id: fetchedDetails.id }, transaction }
-  );
-  return fetchedDetails;
 };
 
-module.exports = { createCustomer, getCustomerDetails, customerMonthlyRenewal, validateBeforeCreatingCustomer };
+// upload profile for customer
+const uploadProfileforCustomer = async (req, res) => {
+  const { Customer } = await connectTodb();
+  const { phone } = req.body;
+
+  try {
+    const checkUser = await Customer.findOne({ where: { phone: phone } });
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    if (!checkUser) {
+      return res.status(400).json({ error: "customer not found" });
+    }
+
+    let profileBase64 = null;
+    if (req.file) {
+      const fileData = await fs.readFile(req.file.path);
+      profileBase64 = `data:${req.file.mimetype};base64,${fileData.toString("base64")}`;
+      await fs.unlink(req.file.path).catch(console.error);
+    }
+
+    if (profileBase64) {
+      await Customer.update({ profile: profileBase64 }, { where: { phone: phone } });
+      return res.status(200).json({ message: "Profile Updated", data: profileBase64 });
+    } else {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+  } catch (e) {
+    if (req.file) {
+      await fs.unlink(req.file.path).catch(console.error);
+    }
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+// get renewl history
+const getRenewalHistoryById = async (req, res) => {
+  try {
+    const { Renewal } = await connectTodb();
+    const fetchedData = await Renewal.findAll({ where: { phone: req.params.phone }, order: [["addedon", "DESC"]] });
+    if (!fetchedData || fetchedData.length === 0) {
+      return res.status(400).json({ data: "No data found" });
+    }
+    return res.status(200).json({ data: fetchedData });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+module.exports = {
+  createCustomer,
+  getCustomerDetails,
+  customerMonthlyRenewal,
+  validateBeforeCreatingCustomer,
+  getRenewalHistoryById,
+  uploadProfileforCustomer,
+};
