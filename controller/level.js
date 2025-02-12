@@ -1,15 +1,16 @@
-const { where } = require("sequelize");
+const { where, Op } = require("sequelize");
 const connectTodb = require("../misc/db");
 
 const getMMAlist = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
-    const { refferal_code, role } = req.body;
 
     const fetchedData = await Employee.findAll({
       where: {
-        joined_by: refferal_code,
-        role: role,
+        [Op.and]: [
+          { [Op.or]: [{ role: "mma" }, { role: "smh" }, { role: "zmh" }, { role: "dmh" }] },
+          { joined_by: req.params.refferalCode },
+        ],
       },
     });
     return res.status(200).json({ data: fetchedData });

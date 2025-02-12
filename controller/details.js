@@ -10,7 +10,7 @@ const getDetailsByRole = async (req, res) => {
     const fetchedData = await Employee.findAll({ where: { joined_by: refferalCode, role: role } });
 
     if (!fetchedData || fetchedData.length === 0) {
-      return res.status(400).json("no data available");
+      return res.status(400).json({ error: "no data available" });
     }
 
     return res.status(200).json({ data: fetchedData });
@@ -110,7 +110,7 @@ const getCustomersDetailsBySMArole = async (req, res) => {
     const { Employee, Customer } = await connectTodb();
     const jmaList = await Employee.findAll({ where: { joined_by: req.params.refferalCode, role: "jma" } });
     if (jmaList.length === 0 || !jmaList) {
-      res.status(400).json("No JMA data found");
+      res.status(400).json({ error: "No JMA data found" });
     }
     let allCustomerData = [];
 
@@ -119,7 +119,7 @@ const getCustomersDetailsBySMArole = async (req, res) => {
       allCustomerData = [...allCustomerData, ...customerList];
     }
     if (allCustomerData.length === 0) {
-      return res.status(400).json("No customer data available");
+      return res.status(400).json({ error: "No customer data available" });
     }
     res.status(200).json({ data: { customerdata: allCustomerData, jmadata: jmaList } });
   } catch (e) {
@@ -135,7 +135,7 @@ const getCustomersDetails = async (req, res) => {
     const fetchedData = await Customer.findAll({ where: { joined_by: req.params.refferalCode } });
 
     if (!fetchedData || fetchedData.length === 0) {
-      return res.status(400).json("no data available");
+      return res.status(400).json({ errror: "no data available" });
     }
 
     return res.status(200).json({ data: fetchedData });

@@ -131,7 +131,7 @@ const customerMonthlyRenewal = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     const { Customer, Employee, Renewal } = await connectTodb();
-    const { joined_by, phone, amount } = req.body;
+    const { joined_by, phone } = req.body;
     let joinedByJMAdata, joinedBySMAdata, joinedByMMAdata;
 
     const customerData = await Customer.findOne({ where: { phone } });
@@ -146,31 +146,43 @@ const customerMonthlyRenewal = async (req, res) => {
     await Renewal.create(req.body, { transaction });
     try {
       joinedByJMAdata = await fetchJoinedByData(customerData.joined_by, Employee);
-      const jmaEarnings = amount * 0.1;
+      const jmaEarnings = 27.5;
       await updateData(joinedByJMAdata.id, jmaEarnings, Employee, transaction);
     } catch (error) {
       await transaction.rollback();
       return res.status(400).json({ error: error.message });
     }
 
-    if (joinedByJMAdata.joined_by != "") {
-      joinedBySMAdata = await fetchJoinedByData(joinedByJMAdata.joined_by, Employee);
-      if (joinedByJMAdata.position > 8) {
-        console.log("JMA position not in range, commission not adding to SMA");
-      } else {
-        const smaEarnings = amount * 0.05;
-        await updateData(joinedBySMAdata.id, smaEarnings, Employee, transaction);
-      }
+    joinedBySMAdata = await fetchJoinedByData(joinedByJMAdata.joined_by, Employee);
+    if (joinedByJMAdata.position > 8) {
+      console.log("JMA position not in range, commission not adding to SMA");
+    } else {
+      const smaEarnings = 10;
+      await updateData(joinedBySMAdata.id, smaEarnings, Employee, transaction);
     }
 
-    if (joinedBySMAdata && joinedBySMAdata.joined_by != "") {
-      joinedByMMAdata = await fetchJoinedByData(joinedBySMAdata.joined_by, Employee);
-      if (joinedBySMAdata.position > 7) {
-        console.log("SMA position not in range, commission not adding to MMA");
-      } else {
-        const mmaEarnings = amount * 0.02;
-        await updateData(joinedByMMAdata.id, mmaEarnings, Employee, transaction);
+    joinedByMMAdata = await fetchJoinedByData(joinedBySMAdata.joined_by, Employee);
+    if (joinedBySMAdata.position <= 7) {
+      let mmaEarnings;
+      switch (joinedByMMAdata.role) {
+        case "mma":
+          mmaEarnings = 6;
+          break;
+        case "dmh":
+          mmaEarnings = 1.75;
+          break;
+        case "zmh":
+          mmaEarnings = 1.3;
+          break;
+        case "smh":
+          mmaEarnings = 1;
+          break;
+        default:
+          mmaEarnings = 0;
       }
+      await updateData(joinedByMMAdata.id, mmaEarnings, Employee, transaction);
+    } else {
+      console.log("SMA position not in range, commission not adding to MMA");
     }
 
     await transaction.commit(); // Commit the transaction if all operations succeed
@@ -190,14 +202,36 @@ const fetchJoinedByData = async (joinedBy, employee) => {
   return joinedByDetails;
 };
 
+// const updateData = async (id, amount, employee, transaction) => {
+//   try {
+//     const checkID = await employee.findOne({ where: { id: id }, transaction });
+//     if (!checkID) {
+//       throw new Error("ID not found");
+//     }
+//     const { earnings } = parseFloat(checkID.dataValues.earnings) || 0;
+//     console.log(earnings);
+//     const newEarnings = earnings + parseFloat(amount);
+//     console.log(newEarnings);
+//     await employee.update({ earnings: newEarnings }, { where: { id: checkID.dataValues.id }, transaction });
+//   } catch (error) {
+//     console.error("Error updating data:", error);
+//     throw error;
+//   }
+// };
+
 const updateData = async (id, amount, employee, transaction) => {
   try {
     const checkID = await employee.findOne({ where: { id: id }, transaction });
     if (!checkID) {
       throw new Error("ID not found");
     }
-    const { earnings } = checkID.dataValues;
-    const newEarnings = earnings + amount;
+
+    // Ensure earnings is treated as a number
+    const earnings = parseFloat(checkID.dataValues.earnings) || 0;
+    console.log(earnings);
+    const newEarnings = earnings + parseFloat(amount);
+    console.log(newEarnings);
+
     await employee.update({ earnings: newEarnings }, { where: { id: checkID.dataValues.id }, transaction });
   } catch (error) {
     console.error("Error updating data:", error);
@@ -243,10 +277,13 @@ const uploadProfileforCustomer = async (req, res) => {
 };
 
 // get renewl history
-const getRenewalHistoryById = async (req, res) => {
+const getRenewalHistory = async (req, res) => {
   try {
     const { Renewal } = await connectTodb();
-    const fetchedData = await Renewal.findAll({ where: { phone: req.params.phone }, order: [["addedon", "DESC"]] });
+    const fetchedData = await Renewal.findAll({
+      where: { joined_by: req.params.joined_by },
+      order: [["addedon", "DESC"]],
+    });
     if (!fetchedData || fetchedData.length === 0) {
       return res.status(400).json({ data: "No data found" });
     }
@@ -261,6 +298,6 @@ module.exports = {
   getCustomerDetails,
   customerMonthlyRenewal,
   validateBeforeCreatingCustomer,
-  getRenewalHistoryById,
+  getRenewalHistory,
   uploadProfileforCustomer,
 };

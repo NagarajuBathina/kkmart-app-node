@@ -7,7 +7,7 @@ router.post("/create-customer", controller.createCustomer);
 router.get("/get-customer-data/:phone", controller.getCustomerDetails);
 router.post("/monthly-renewal", controller.customerMonthlyRenewal);
 router.post("/validate_before_creating_customer", controller.validateBeforeCreatingCustomer);
-router.get("/get_renewal_data_by_id/:phone", controller.getRenewalHistoryById);
+router.get("/get_renewal_data_by_id/:joined_by", controller.getRenewalHistory);
 router.post("/update_profile_for_customer", upload.single("profile"), controller.uploadProfileforCustomer);
 
 module.exports = router;
