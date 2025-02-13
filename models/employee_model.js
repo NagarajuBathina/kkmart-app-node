@@ -73,6 +73,15 @@ module.exports = (sequelize, dataTypes) => {
       customer_count: {
         type: dataTypes.INTEGER,
       },
+      direct_mma_count: {
+        type: dataTypes.INTEGER,
+      },
+      level1_mma_count: {
+        type: dataTypes.INTEGER,
+      },
+      level2_mma_count: {
+        type: dataTypes.INTEGER,
+      },
       position: {
         type: dataTypes.INTEGER,
       },
@@ -92,6 +101,10 @@ module.exports = (sequelize, dataTypes) => {
       },
       profile: {
         type: dataTypes.TEXT("long"),
+      },
+      place_of_posting: {
+        type: dataTypes.STRING,
+        allowNull: false,
       },
     },
     {
