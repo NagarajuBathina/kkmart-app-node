@@ -97,7 +97,7 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.DECIMAL(10, 2),
       },
       deductions: {
-        type: dataTypes.INTEGER,
+        type: dataTypes.DECIMAL(10, 2),
       },
       profile: {
         type: dataTypes.TEXT("long"),
