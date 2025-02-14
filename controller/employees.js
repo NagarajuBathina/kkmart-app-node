@@ -321,9 +321,9 @@ const checkUserDetailsBeforeCreating = async (req, res) => {
 const loginEmployee = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
-    const { adhaar, password } = req.body;
+    const { phone, password } = req.body;
 
-    const employee = await Employee.findOne({ where: { adhaar, password } });
+    const employee = await Employee.findOne({ where: { phone, password } });
     if (!employee) {
       return res.status(401).json({ error: "Invalid adhaar or password" });
     }
@@ -339,11 +339,11 @@ const loginEmployee = async (req, res) => {
 const getEmployeeDetails = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
-    const { adhaar } = req.body;
+    const { phone } = req.body;
 
-    const employee = await Employee.findOne({ where: { adhaar } });
+    const employee = await Employee.findOne({ where: { phone } });
     if (!employee) {
-      return res.status(401).json({ error: "wrong adhaar" });
+      return res.status(401).json({ error: "wrong phone phone" });
     }
 
     const { ...employeeDetails } = employee.dataValues;
