@@ -521,7 +521,7 @@ const generateOfferLetter = async (req, res) => {
     const filePath = path.join(dirPath, `${employeeDetails.name}_offer_letter.pdf`);
 
     // Create the directory if it doesn't exist
-    // await fs.mkdir(dirPath, { recursive: true });
+    await fs.mkdir(dirPath, { recursive: true });
 
     // Save the PDF file
     await fs.writeFile(filePath, pdfBuffer);
