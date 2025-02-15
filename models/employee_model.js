@@ -106,6 +106,9 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
+      offer_letter: {
+        type: dataTypes.TEXT("long"),
+      },
     },
     {
       tableName: "app_employees",

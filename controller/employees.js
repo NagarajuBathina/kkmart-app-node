@@ -1,7 +1,8 @@
 const { where } = require("sequelize");
+const puppeteer = require("puppeteer");
 const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
-
+const path = require("path");
 //create employee
 const createEmployee = async (req, res) => {
   const { sequelize } = await connectTodb();
@@ -419,112 +420,81 @@ const uploadProfile = async (req, res) => {
 const generateOfferLetter = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
+    const checkUser = await Employee.findOne({ where: req.body.params });
 
-    const employee = await Employee.findOne({
-      where: { phone: req.body.params },
-    });
-
-    if (!employee) {
-      return res.status(404).json({ message: "Employee not found" });
+    if (!checkUser) {
+      return req.status(400).json({ error: "no data found" });
     }
 
-    const tableRows = months.map((month, index) => {
-      // Calculate total for each row
-      const pension = monthSlip ? parseFloat(monthSlip.actual_pension) || 0 : 0;
-      const da = monthSlip ? parseFloat(monthSlip.da_amount) || 0 : 0;
-      const addQuant = monthSlip ? parseFloat(monthSlip.add_quant_in_rs) || 0 : 0;
-      const arrears = monthSlip ? parseFloat(monthSlip.arrears_in_rs) || 0 : 0;
-      const total = pension + da + addQuant + arrears;
+    const employeeDetails = checkUser.dataValues;
+    console.log(employeeDetails);
 
-      return {
-        row: `
-            <tr>
-              <td style="border: 1px solid #2d3748; padding: 8px">${index + 1}</td>
-              <td style="border: 1px solid #2d3748; padding: 8px">${displayYear}</td>
-              <td style="border: 1px solid #2d3748; padding: 8px">${month}</td>
-              <td style="border: 1px solid #2d3748; padding: 8px">₹${pension}</td>
-              <td style="border: 1px solid #2d3748; padding: 8px">₹${da}</td>
-              <td style="border: 1px solid #2d3748; padding: 8px">₹${addQuant}</td>
-              <td style="border: 1px solid #2d3748; padding: 8px">₹${arrears}</td>
-              <td style="border: 1px solid #2d3748; padding: 8px">₹${total}</td>
-            </tr>
-          `,
-        total: total,
-      };
-    });
-
-    // Calculate total amount by summing the total from each row
-    const totalAmount = tableRows.reduce((sum, row) => sum + row.total, 0);
-
-    // Join all rows for HTML
-    const tableRowsHtml = tableRows.map((row) => row.row).join("");
-
+    // Create the HTML content using the employee details
     const htmlContent = `
-      <div style="width: auto; padding: 15px; background-color: white; margin: 3px">
-        <div style="text-align: center; margin-bottom: 4px">
-          <h2 style="font-size: 1.25rem; font-weight: bold">Visakhapatnam Port Authority</h2>
-          <h3 style="font-size: 1.25rem">Accounts Department</h3>
-          <div style="display: flex; flex-grow: 1; flex-wrap: wrap">
-            <div style="width: 42%; text-align: left">
-              <h4>${employee.employee_name}</h4>
-            </div>
-            <div style="width: 42%; text-align: left">
-              <h4>${employee_number}</h4>
-            </div>
-          </div>
-        </div>
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>KKMart Employee Offer Letter</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 40px;
+              padding: 20px;
+              border: 1px solid #ddd;
+              border-radius: 10px;
+              max-width: 800px;
+              background-color: #f9f9f9;
+            }
+            h2, h3 {
+              text-align: center;
+              color: #333;
+            }
+            p {
+              font-size: 16px;
+              line-height: 1.5;
+            }
+            .offer-details {
+              margin-top: 20px;
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 5px;
+              background: #fff;
+            }
+            .signature {
+              margin-top: 30px;
+              text-align: right;
+            }
+          </style>
+        </head>
+        <body>
+          <h2>KKMart Offer Letter</h2>
+          <p>Joining Date: ${employeeDetails.addedon}</p>
+          <p><strong>${employeeDetails.name}</strong></p>
+          <p>${employeeDetails.address}</p>
+          <p>${employeeDetails.city}, ${employeeDetails.place_of_posting}, ${employeeDetails.pincode}</p>
 
-        <div style="margin-bottom: 24px; line-height: 1.5">
-          <div>Visakhapatnam Port Authority</div>
-          <div>Visakhapatnam</div>
-          <div>
-            <p>
-              Sir,
-              <br />
-              <span style="margin-left: 24px">
-                Sub: Issue of "YEARLY PENSION CERTIFICATE" for the year 01.04.${year}-31.03.${parseInt(year) + 1} Reg.
-              </span>
-            </p>
-            <p>
-              The remittance particulars of monthly pension made by VPA to your A/c.No. 
-              ${monthlySlips[0]?.bank_account_number || ""} for the period 01.04.${year}-31.03.${parseInt(year) + 1} 
-              are furnished below.
-            </p>
-          </div>
-        </div>
+          <p>Dear ${employeeDetails.name},</p>
 
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid #2d3748">
-          <thead>
-            <tr style="background-color: #f7fafc">
-              <th style="border: 1px solid #2d3748; padding: 8px">S.No</th>
-              <th style="border: 1px solid #2d3748; padding: 8px">Year</th>
-              <th style="border: 1px solid #2d3748; padding: 8px">Month</th>
-              <th style="border: 1px solid #2d3748; padding: 8px">Pension in Rs.</th>
-              <th style="border: 1px solid #2d3748; padding: 8px">DA in Rs.</th>
-              <th style="border: 1px solid #2d3748; padding: 8px">Add.Quant in Rs.</th>
-              <th style="border: 1px solid #2d3748; padding: 8px">Arrears in Rs.</th>
-              <th style="border: 1px solid #2d3748; padding: 8px">Total in Rs.</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRowsHtml}
-            <tr>
-              <td colspan="4" style="border: 1px solid #2d3748; padding: 8px; text-align: center; font-weight: bold">
-                Total Amount
-              </td>
-              <td colspan="4" style="border: 1px solid #2d3748; padding: 8px; font-weight: bold; text-align: center">
-                ₹${totalAmount.toFixed(2)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p>This information is issued only for the purpose of submitting the same to IT authorities</p>
-        <div style="display: flex; justify-content: flex-end; margin-right: 78px;">
-          <div style="text-align: right">
-            <p>F.A. & C.A.O.</p>
+          <p>
+            Congratulations! We are pleased to confirm that you have been selected to work for KKMart. We are delighted to
+            make you the following job offer.
+          </p>
+
+          <div class="offer-details">
+            <p>
+              The position we are offering you is that of <strong><sup>${employeeDetails.role}<sup></strong> at a monthly salary of
+              
+            </p>
           </div>
-        </div>
-      </div>
+
+          <div class="signature">
+            <p>Best Regards,</p>
+            <p>KKMart Management</p>
+          </div>
+        </body>
+      </html>
     `;
 
     // Generate PDF using Puppeteer
@@ -542,15 +512,31 @@ const generateOfferLetter = async (req, res) => {
     });
     const page = await browser.newPage();
     await page.setContent(htmlContent);
-    const pdfBuffer = await page.pdf();
+    const pdfBuffer = await page.pdf({ format: "A4" });
     await browser.close();
 
-    // Calculate PDF size
-    const pdfSize = parseInt(Buffer.byteLength(pdfBuffer)) / 1000;
+    // Define the directory and file path
+    const dirPath = path.join(__dirname, "../uploads/profiles");
+    const filePath = path.join(dirPath, `${employeeDetails.name}_offer_letter.pdf`);
 
-    res.status(200).json({
-      message: "Yearly certificate generated successfully",
-    });
+    // Create the directory if it doesn't exist
+    // await fs.mkdir(dirPath, { recursive: true });
+
+    // Save the PDF file
+    await fs.writeFile(filePath, pdfBuffer);
+
+    // Convert the PDF file to Base64
+    const fileData = await fs.readFile(filePath);
+    const base64String = `data:application/pdf;base64,${fileData.toString("base64")}`;
+    // Optionally, delete the file after conversion
+    await fs.unlink(filePath).catch(console.error);
+
+    if (base64String) {
+      await Employee.update({ offer_letter: base64String }, { where: { phone: employeeDetails.phone } });
+      return res.status(200).json({ message: "Offer letter generated successfully", data: base64String });
+    } else {
+      return res.status(400).json({ error: "Offer letter not generated" });
+    }
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ message: error.message });
