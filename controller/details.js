@@ -20,7 +20,7 @@ const getDetailsByRole = async (req, res) => {
   }
 };
 
-const getDetailsOfJMAandCustomers = async (req, res) => {
+const getAllCategoryDetailsById = async (req, res) => {
   try {
     const { Employee, Customer } = await connectTodb();
 
@@ -30,6 +30,7 @@ const getDetailsOfJMAandCustomers = async (req, res) => {
     let allCustomerData = [];
     let smaList = [];
     let jmaList = [];
+    let allMMAlist = [];
 
     // Get MMA list
     const mmaList = await Employee.findAll({
@@ -45,6 +46,11 @@ const getDetailsOfJMAandCustomers = async (req, res) => {
     if (mmaList && mmaList.length > 0) {
       allMMAandAboveRolesData = [...mmaList];
     }
+    console.log(allMMAandAboveRolesData[0].refferel_code);
+
+    // for(let i=0 ; i<allMMAandAboveRolesData.length ; i++){
+    //   allMMAlist = [...allMMAandAboveRolesData[i].refferel_code]
+    // }
 
     // Get unique SMAs using Set
     const smaSet = new Set();
@@ -146,7 +152,7 @@ const getCustomersDetails = async (req, res) => {
 
 module.exports = {
   getDetailsByRole,
-  getDetailsOfJMAandCustomers,
+  getAllCategoryDetailsById,
   getCustomersDetails,
   getCustomersDetailsBySMArole,
 };

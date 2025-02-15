@@ -21,12 +21,15 @@ module.exports = (sequelize, dataTypes) => {
       },
       adhaar: {
         type: dataTypes.STRING,
-        allowNull: false,
         unique: true,
       },
       phone: {
         type: dataTypes.STRING,
         allowNull: false,
+        unique: true,
+      },
+      pan: {
+        type: dataTypes.STRING,
         unique: true,
       },
       city: {
@@ -109,6 +112,25 @@ module.exports = (sequelize, dataTypes) => {
       offer_letter: {
         type: dataTypes.TEXT("long"),
       },
+      name_on_idcard: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      daily_earnings: {
+        type: dataTypes.DECIMAL(10, 2),
+      },
+      bank_no: {
+        type: dataTypes.STRING,
+      },
+      ifsc_code: {
+        type: dataTypes.STRING,
+      },
+      nominee_name: {
+        type: dataTypes.STRING,
+      },
+      nominee_phone: {
+        type: dataTypes.STRING,
+      },
     },
     {
       tableName: "app_employees",
@@ -116,6 +138,5 @@ module.exports = (sequelize, dataTypes) => {
       timestamps: false,
     }
   );
-
   return Employee;
 };

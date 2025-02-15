@@ -3,6 +3,7 @@ const puppeteer = require("puppeteer");
 const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
 const path = require("path");
+const { error } = require("console");
 //create employee
 const createEmployee = async (req, res) => {
   const { sequelize } = await connectTodb();
@@ -282,16 +283,7 @@ const fetchJoinedByDetails = async (joined_by, employee, transaction) => {
 const checkUserDetailsBeforeCreating = async (req, res) => {
   const { Employee } = await connectTodb();
   try {
-    let { adhaar, phone, joined_by, role } = req.body;
-    const existingAdhaar = await Employee.findOne({ where: { adhaar } });
-    if (existingAdhaar) {
-      console.log("Aadhaar already exists:", adhaar);
-      return res.status(400).json({ error: "Aadhaar already exists." });
-    }
-    const existingPhone = await Employee.findOne({ where: { phone } });
-    if (existingPhone) {
-      return res.status(400).json({ error: "Phone already exists." });
-    }
+    let { joined_by, role } = req.body;
 
     const checkJoindedBy = await Employee.findOne({ where: { refferel_code: joined_by } });
     if (!checkJoindedBy) {
@@ -317,6 +309,40 @@ const checkUserDetailsBeforeCreating = async (req, res) => {
     } else {
       return res.status(400).json({ error: "User can't be joined under this referral id" });
     }
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+//check phone number already exists
+const checkPhoneAlreadyExists = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { phone } = req.body;
+    const existingPhone = await Employee.findOne({ where: { phone } });
+    if (existingPhone) {
+      return res.status(400).json({ error: "Phone already exists." });
+    }
+    return res.status(200).json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+//check mma pincode already exists
+const checkMMAalreadyExistasForPincode = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { pincode, role } = req.body;
+    console.log(req.body);
+    const checkPincode = await Employee.findOne({ where: { pincode: pincode, role: "mma" } });
+
+    if (checkPincode) {
+      return res.status(400).json({
+        error: "mma already exists for this pincode",
+      });
+    }
+    return res.status(200).json({ success: true });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
@@ -552,4 +578,6 @@ module.exports = {
   changePassword,
   uploadProfile,
   generateOfferLetter,
+  checkPhoneAlreadyExists,
+  checkMMAalreadyExistasForPincode,
 };
