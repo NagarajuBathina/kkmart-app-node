@@ -131,6 +131,13 @@ module.exports = (sequelize, dataTypes) => {
       nominee_phone: {
         type: dataTypes.STRING,
       },
+      date: {
+        type: dataTypes.DATE,
+      },
+      state: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       tableName: "app_employees",

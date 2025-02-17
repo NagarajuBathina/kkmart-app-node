@@ -101,14 +101,14 @@ const createEmployee = async (req, res) => {
         console.log("hello");
         fetchDetailsOfLevel1Refferel = await fetchJoinedByDetails(joinedbyDetails.joined_by, Employee, transaction);
         console.log(fetchDetailsOfLevel1Refferel);
-        const level1DirectMMACount = (fetchDetailsOfLevel1Refferel.direct_mma_count || 0) + 1;
+        const level1DirectMMACount = fetchDetailsOfLevel1Refferel.direct_mma_count || 0;
         const level1MMAcount = (fetchDetailsOfLevel1Refferel.mma_count || 0) + 1;
         level2UniverselJoinedBy = fetchDetailsOfLevel1Refferel.joined_by;
 
         console.log("level1 ", level1DirectMMACount);
         console.log("level1 ", level1MMAcount);
 
-        if (fetchDetailsOfLevel1Refferel.direct_mma_count < 5) {
+        if (level1DirectMMACount < 5) {
           console.log("level1");
           await Employee.update(
             {
@@ -134,16 +134,18 @@ const createEmployee = async (req, res) => {
             { mma_count: level1MMAcount, role: "smh" },
             { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
           );
-        } else if (level1MMAcount < 30 && level1DirectMMACount >= 5) {
-          console.log("level4");
-          await Employee.update(
-            {
-              mma_count: level1MMAcount,
-              level2_mma_count: (fetchDetailsOfLevel1Refferel.level2_mma_count || 0) + 1,
-            },
-            { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
-          );
-        } else {
+        }
+        // else if (level1MMAcount < 30 && level1DirectMMACount >= 5) {
+        //   console.log("level4");
+        //   await Employee.update(
+        //     {
+        //       mma_count: level1MMAcount,
+        //       // level2_mma_count: (fetchDetailsOfLevel1Refferel.level2_mma_count || 0) + 1,
+        //     },
+        //     { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
+        //   );
+        // }
+        else {
           console.log("level6");
           await Employee.update(
             { mma_count: level1MMAcount },
@@ -163,7 +165,7 @@ const createEmployee = async (req, res) => {
         }
         console.log(fetchDetailsOfLevel2Refferel);
 
-        const level2DirectMMACount = (fetchDetailsOfLevel2Refferel.direct_mma_count || 0) + 1;
+        const level2DirectMMACount = fetchDetailsOfLevel2Refferel.direct_mma_count || 0;
         const level2MMAcount = (fetchDetailsOfLevel2Refferel.mma_count || 0) + 1;
         console.log("level2 ", level2DirectMMACount);
         console.log("level2 ", level2MMAcount);
@@ -177,7 +179,7 @@ const createEmployee = async (req, res) => {
             },
             { where: { refferel_code: level2UniverselJoinedBy }, transaction }
           );
-        } else if (level2MMAcount === 30 && level2DirectMMACount >= 5) {
+        } else if (level2MMAcount === 31 && level2DirectMMACount >= 5) {
           console.log("level8");
           await Employee.update(
             {
@@ -188,13 +190,13 @@ const createEmployee = async (req, res) => {
             },
             { where: { refferel_code: level2UniverselJoinedBy }, transaction }
           );
-        } else if (level2MMAcount >= 105) {
+        } else if (level2MMAcount >= 106) {
           console.log("level9");
           await Employee.update(
             { mma_count: level2MMAcount, role: "smh" },
             { where: { refferel_code: level2UniverselJoinedBy }, transaction }
           );
-        } else if (level2MMAcount < 30 && level2DirectMMACount >= 5) {
+        } else if (level2MMAcount < 31 && level2DirectMMACount >= 5) {
           console.log("level10");
           await Employee.update(
             {
@@ -405,6 +407,22 @@ const changePassword = async (req, res) => {
   }
 };
 
+//update bank details
+const updateBankDetails = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { bank_no, ifsc_code, nominee_phone, nominee_name, phone } = req.body;
+    console.log(req.body);
+    Employee.update(
+      { bank_no: bank_no, ifsc_code: ifsc_code, nominee_name: nominee_name, nominee_phone: nominee_phone },
+      { where: { phone: phone } }
+    );
+    return res.status(200).json({ message: "Updated successfully" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
 // upload profile
 const uploadProfile = async (req, res) => {
   const { Employee } = await connectTodb();
@@ -443,6 +461,7 @@ const uploadProfile = async (req, res) => {
   }
 };
 
+// generate offer letter function
 const generateOfferLetter = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
@@ -580,4 +599,5 @@ module.exports = {
   generateOfferLetter,
   checkPhoneAlreadyExists,
   checkMMAalreadyExistasForPincode,
+  updateBankDetails,
 };

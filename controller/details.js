@@ -5,9 +5,20 @@ const getDetailsByRole = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
     const { refferalCode, role } = req.body;
-    console.log(req.body);
+    let fetchedData;
 
-    const fetchedData = await Employee.findAll({ where: { joined_by: refferalCode, role: role } });
+    if (role != "sma" || role != "jma") {
+      fetchedData = await Employee.findAll({
+        where: {
+          [Op.and]: [
+            { [Op.or]: [{ role: "mma" }, { role: "smh" }, { role: "zmh" }, { role: "dmh" }] },
+            { joined_by: refferalCode },
+          ],
+        },
+      });
+    } else {
+      fetchedData = await Employee.findAll({ where: { joined_by: refferalCode, role: role } });
+    }
 
     if (!fetchedData || fetchedData.length === 0) {
       return res.status(400).json({ error: "no data available" });
