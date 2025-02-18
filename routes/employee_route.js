@@ -12,7 +12,6 @@ router.post("/validate_userdetails_before_account_creation", controller.checkUse
 router.get("/generate_offer_letter/:phone", controller.generateOfferLetter);
 router.post("/check_phone_already_exists", controller.checkPhoneAlreadyExists);
 router.post("/check_mma_pincode_already_exists", controller.checkMMAalreadyExistasForPincode);
-router.post("/update_bank_details", controller.updateBankDetails);
 module.exports = router;
 
 // {

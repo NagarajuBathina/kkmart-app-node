@@ -8,6 +8,8 @@ const withdrawalEarnings = async (req, res) => {
     const { Withdrawal, Employee } = await connectTodb();
     const { phone, amount } = req.body;
 
+    console.log(req.body);
+
     const checkUser = await Employee.findOne({ where: { phone: phone } });
 
     if (!checkUser) {

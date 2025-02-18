@@ -12,6 +12,7 @@ const customerRoute = require("./routes/cutsomer_route");
 const withdrawalRoute = require("./routes/withdrawal_route");
 const detailsRoute = require("./routes/details_route");
 const adminRoute = require("./routes/admin_route");
+const employeeBankDetailsRoute = require("./routes/bank_details_route");
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use(customerRoute);
 app.use(withdrawalRoute);
 app.use(detailsRoute);
 app.use(adminRoute);
+app.use(employeeBankDetailsRoute);
 
 app.use("/uploads", express.static("uploads"));
 

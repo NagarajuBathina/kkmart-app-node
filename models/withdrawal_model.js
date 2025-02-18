@@ -15,10 +15,6 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
-      adhaar: {
-        type: dataTypes.STRING,
-        allowNull: false,
-      },
       status: {
         type: dataTypes.STRING,
         allowNull: false,
@@ -28,6 +24,10 @@ module.exports = (sequelize, dataTypes) => {
         allowNull: false,
       },
       addedon: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      referrel_code: {
         type: dataTypes.STRING,
         allowNull: false,
       },

@@ -357,10 +357,11 @@ const loginEmployee = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
     const { phone, password } = req.body;
+    console.log(req.body);
 
     const employee = await Employee.findOne({ where: { phone, password } });
     if (!employee) {
-      return res.status(401).json({ error: "Invalid adhaar or password" });
+      return res.status(401).json({ error: "Invalid phone or password" });
     }
 
     const { ...employeeDetails } = employee.dataValues;
@@ -404,31 +405,6 @@ const changePassword = async (req, res) => {
 
     await Employee.update({ password: newPassword }, { where: { phone: phone } });
     return res.status(200).json({ message: "Password Changed successfully" });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-};
-
-//update bank details
-const updateBankDetails = async (req, res) => {
-  try {
-    const { Employee } = await connectTodb();
-    const { bank_no, ifsc_code, nominee_phone, nominee_name, phone, adhaar, pan, nominee_adhaar } = req.body;
-    console.log(req.body);
-
-    Employee.update(
-      {
-        bank_no: bank_no,
-        ifsc_code: ifsc_code,
-        nominee_name: nominee_name,
-        nominee_phone: nominee_phone,
-        nominee_adhaar: nominee_adhaar,
-        adhaar: adhaar,
-        pan: pan,
-      },
-      { where: { phone: phone } }
-    );
-    return res.status(200).json({ message: "Updated successfully" });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -540,8 +516,7 @@ const generateOfferLetter = async (req, res) => {
 
           <div class="offer-details">
             <p>
-              The position we are offering you is that of <strong><sup>${employeeDetails.role}<sup></strong> at a monthly salary of
-              
+              The position we are offering you is: <strong>${employeeDetails.role.toUpperCase()}</strong> 
             </p>
           </div>
 
@@ -555,8 +530,8 @@ const generateOfferLetter = async (req, res) => {
 
     // Generate PDF using Puppeteer
     const browser = await puppeteer.launch({
-      // headless: true,
-      executablePath: "/usr/bin/chromium-browser",
+      headless: true,
+      // executablePath: "/usr/bin/chromium-browser",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -610,5 +585,4 @@ module.exports = {
   generateOfferLetter,
   checkPhoneAlreadyExists,
   checkMMAalreadyExistasForPincode,
-  updateBankDetails,
 };

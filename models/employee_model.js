@@ -19,18 +19,10 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
-      adhaar: {
-        type: dataTypes.STRING,
-        // unique: true,
-      },
       phone: {
         type: dataTypes.STRING,
         allowNull: false,
         unique: true,
-      },
-      pan: {
-        type: dataTypes.STRING,
-        // unique: true,
       },
       city: {
         type: dataTypes.STRING,
@@ -119,21 +111,6 @@ module.exports = (sequelize, dataTypes) => {
       },
       daily_earnings: {
         type: dataTypes.DECIMAL(10, 2),
-      },
-      bank_no: {
-        type: dataTypes.STRING,
-      },
-      ifsc_code: {
-        type: dataTypes.STRING,
-      },
-      nominee_name: {
-        type: dataTypes.STRING,
-      },
-      nominee_phone: {
-        type: dataTypes.STRING,
-      },
-      nominee_adhaar: {
-        type: dataTypes.STRING,
       },
       date: {
         type: dataTypes.DATE,
