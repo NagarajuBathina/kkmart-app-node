@@ -64,42 +64,42 @@ const createCustomer = async (req, res) => {
 };
 
 // Helper function to process earnings
-const processEarnings = async (joined_by, Employee, transaction) => {
-  const joinedByJMAdata = await fetchJoinedByData(joined_by, Employee);
+const processEarnings = async (joined_by, employee, transaction) => {
+  const joinedByJMAdata = await fetchJoinedByData(joined_by, employee);
   const jmaEarnings = 50;
 
-  await updateData(joinedByJMAdata.phone, jmaEarnings, Employee, transaction);
-  await Employee.update(
+  await updateData(joinedByJMAdata.phone, jmaEarnings, employee, transaction);
+  await employee.update(
     { customer_count: joinedByJMAdata.customer_count + 1 },
     { where: { phone: joinedByJMAdata.phone }, transaction }
   );
 
-  const joinedBySMAdata = await fetchJoinedByData(joinedByJMAdata.joined_by, Employee);
+  const joinedBySMAdata = await fetchJoinedByData(joinedByJMAdata.joined_by, employee);
   if (joinedByJMAdata.position <= 8) {
     const smaEarnings = 20;
 
-    await updateData(joinedBySMAdata.phone, smaEarnings, Employee, transaction);
-    await Employee.update(
+    await updateData(joinedBySMAdata.phone, smaEarnings, employee, transaction);
+    await employee.update(
       { customer_count: joinedBySMAdata.customer_count + 1 },
       { where: { phone: joinedBySMAdata.phone }, transaction }
     );
   }
 
-  const joinedByMMAdata = await fetchJoinedByData(joinedBySMAdata.joined_by, Employee);
+  const joinedByMMAdata = await fetchJoinedByData(joinedBySMAdata.joined_by, employee);
   try {
     if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count === 0) {
       const mmaEarnings = 10;
 
-      await updateData(joinedByMMAdata.phone, mmaEarnings, Employee, transaction);
-      await Employee.update(
+      await updateData(joinedByMMAdata.phone, mmaEarnings, employee, transaction);
+      await employee.update(
         { customer_count: joinedByMMAdata.customer_count + 1 },
         { where: { phone: joinedByMMAdata.phone }, transaction }
       );
     } else if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count > 0) {
       const mmaEarnings = 5;
 
-      await updateData(joinedByMMAdata.phone, mmaEarnings, Employee, transaction);
-      await Employee.update(
+      await updateData(joinedByMMAdata.phone, mmaEarnings, employee, transaction);
+      await employee.update(
         { customer_count: joinedByMMAdata.customer_count + 1 },
         { where: { phone: joinedByMMAdata.phone }, transaction }
       );

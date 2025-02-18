@@ -18,6 +18,8 @@ const createEmployee = async (req, res) => {
       fetchDetailsOfLevel2Refferel,
       level2UniverselJoinedBy;
 
+    console.log(req.body);
+
     // Fetch details of the referrer
     joinedbyDetails = await fetchJoinedByDetails(joined_by, Employee, transaction);
 
@@ -411,10 +413,19 @@ const changePassword = async (req, res) => {
 const updateBankDetails = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
-    const { bank_no, ifsc_code, nominee_phone, nominee_name, phone } = req.body;
+    const { bank_no, ifsc_code, nominee_phone, nominee_name, phone, adhaar, pan, nominee_adhaar } = req.body;
     console.log(req.body);
+
     Employee.update(
-      { bank_no: bank_no, ifsc_code: ifsc_code, nominee_name: nominee_name, nominee_phone: nominee_phone },
+      {
+        bank_no: bank_no,
+        ifsc_code: ifsc_code,
+        nominee_name: nominee_name,
+        nominee_phone: nominee_phone,
+        nominee_adhaar: nominee_adhaar,
+        adhaar: adhaar,
+        pan: pan,
+      },
       { where: { phone: phone } }
     );
     return res.status(200).json({ message: "Updated successfully" });

@@ -21,7 +21,7 @@ module.exports = (sequelize, dataTypes) => {
       },
       adhaar: {
         type: dataTypes.STRING,
-        unique: true,
+        // unique: true,
       },
       phone: {
         type: dataTypes.STRING,
@@ -30,7 +30,7 @@ module.exports = (sequelize, dataTypes) => {
       },
       pan: {
         type: dataTypes.STRING,
-        unique: true,
+        // unique: true,
       },
       city: {
         type: dataTypes.STRING,
@@ -55,6 +55,7 @@ module.exports = (sequelize, dataTypes) => {
       refferel_code: {
         type: dataTypes.STRING,
         allowNull: false,
+        unique: true,
       },
       addedon: {
         type: dataTypes.STRING,
@@ -131,10 +132,17 @@ module.exports = (sequelize, dataTypes) => {
       nominee_phone: {
         type: dataTypes.STRING,
       },
+      nominee_adhaar: {
+        type: dataTypes.STRING,
+      },
       date: {
         type: dataTypes.DATE,
       },
       state: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      district: {
         type: dataTypes.STRING,
         allowNull: false,
       },

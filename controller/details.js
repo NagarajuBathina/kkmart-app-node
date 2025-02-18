@@ -56,6 +56,8 @@ const getAllCategoryDetailsById = async (req, res) => {
     // Store MMA data if available
     if (mmaList && mmaList.length > 0) {
       allMMAandAboveRolesData = [...mmaList];
+    } else {
+      return res.status(400).json({ error: "no data found" });
     }
     console.log(allMMAandAboveRolesData[0].refferel_code);
 
