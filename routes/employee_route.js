@@ -10,7 +10,7 @@ router.post("/change_password", controller.changePassword);
 router.post("/update_profile", upload.single("profile"), controller.uploadProfile);
 router.post("/validate_userdetails_before_account_creation", controller.checkUserDetailsBeforeCreating);
 router.get("/generate_offer_letter/:phone", controller.generateOfferLetter);
-router.post("/check_phone_already_exists_pincode_validatation", controller.checkPhoneAlreadyExistsAndPincode);
+router.post("/check_phone_already_exists", controller.checkPhoneAlreadyExists);
 router.post("/check_mma_pincode_already_exists", controller.checkMMAalreadyExistsForPincode);
 module.exports = router;
 

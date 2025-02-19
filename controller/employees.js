@@ -319,19 +319,15 @@ const checkUserDetailsBeforeCreating = async (req, res) => {
 };
 
 //check phone number already exists
-const checkPhoneAlreadyExistsAndPincode = async (req, res) => {
+const checkPhoneAlreadyExists = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
-    const { phone, pincode, introducer_phone } = req.body;
+    const { phone } = req.body;
     const existingPhone = await Employee.findOne({ where: { phone } });
     if (existingPhone) {
       return res.status(400).json({ error: "Phone already exists." });
     }
-    const getUserData = await Employee.findOne({ where: introducer_phone });
-    console.log(getUserData);
-    if (getUserData.pincode != pincode) {
-      return res.status(400).json({ error: "Entered invalid pincode" });
-    }
+
     return res.status(200).json({ success: true });
   } catch (e) {
     return res.status(500).json({ error: e.message });
@@ -342,15 +338,35 @@ const checkPhoneAlreadyExistsAndPincode = async (req, res) => {
 const checkMMAalreadyExistsForPincode = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
-    const { pincode } = req.body;
-    const checkPincode = await Employee.findOne({ where: { pincode: pincode, role: "mma" } });
+    const { pincode, role, phone } = req.body;
 
-    if (checkPincode) {
-      return res.status(400).json({
-        error: "mma already exists for this pincode",
-      });
+    console.log(req.body);
+
+    if (role === "mma") {
+      checkPincode = await Employee.findOne({ where: { pincode: pincode, role: "mma" } });
+      if (checkPincode) {
+        return res.status(400).json({
+          error: "mma already exists for this pincode",
+        });
+      } else {
+        return res.status(200).json({ success: true });
+      }
+    } else if (role === "sma" || role === "jma") {
+      // Fetch the details of the referred user
+      const fetchedDetails = await Employee.findOne({ where: { phone } });
+      if (!fetchedDetails) {
+        return res.status(400).json({ error: "Invalid referral code" });
+      }
+
+      // Check if the fetched pincode matches the provided pincode
+      if (fetchedDetails.pincode === pincode) {
+        return res.status(200).json({ success: true });
+      } else {
+        return res.status(400).json({ error: "Incorrect pincode" });
+      }
+    } else {
+      return res.status(400).json({ error: "Invalid role" });
     }
-    return res.status(200).json({ success: true });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
@@ -510,7 +526,7 @@ const generateOfferLetter = async (req, res) => {
           </style>
         </head>
         <body>
-          <h2><u>KKMART OFFET LETTER<u></h2>
+          <h2><u>KKMART OFFER LETTER</u></h2>
           <p>Joining Date: ${employeeDetails.addedon}</p>
           <p><strong>${name}</strong></p>
           <p>${address}</p>
@@ -595,6 +611,6 @@ module.exports = {
   changePassword,
   uploadProfile,
   generateOfferLetter,
-  checkPhoneAlreadyExistsAndPincode,
+  checkPhoneAlreadyExists,
   checkMMAalreadyExistsForPincode,
 };
