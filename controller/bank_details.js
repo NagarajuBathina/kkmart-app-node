@@ -6,8 +6,6 @@ const uploadBankDetails = async (req, res) => {
   try {
     const { EmployeeBankDetails } = await connectTodb();
 
-    console.log(req.body);
-
     await EmployeeBankDetails.create(req.body);
     return res.status(200).json({ message: "Updated successfully" });
   } catch (e) {
@@ -18,7 +16,6 @@ const uploadBankDetails = async (req, res) => {
 const fetchBankDetailsById = async (req, res) => {
   try {
     const { EmployeeBankDetails } = await connectTodb();
-    console.log(req.params);
     const bankDetails = await EmployeeBankDetails.findOne({ where: { refferel_code: req.params.refferel_code } });
     if (!bankDetails) {
       return res.status(400).json({ error: "no data found" });

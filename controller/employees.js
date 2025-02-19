@@ -319,13 +319,18 @@ const checkUserDetailsBeforeCreating = async (req, res) => {
 };
 
 //check phone number already exists
-const checkPhoneAlreadyExists = async (req, res) => {
+const checkPhoneAlreadyExistsAndPincode = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
-    const { phone } = req.body;
+    const { phone, pincode, introducer_phone } = req.body;
     const existingPhone = await Employee.findOne({ where: { phone } });
     if (existingPhone) {
       return res.status(400).json({ error: "Phone already exists." });
+    }
+    const getUserData = await Employee.findOne({ where: introducer_phone });
+    console.log(getUserData);
+    if (getUserData.pincode != pincode) {
+      return res.status(400).json({ error: "Entered invalid pincode" });
     }
     return res.status(200).json({ success: true });
   } catch (e) {
@@ -334,11 +339,10 @@ const checkPhoneAlreadyExists = async (req, res) => {
 };
 
 //check mma pincode already exists
-const checkMMAalreadyExistasForPincode = async (req, res) => {
+const checkMMAalreadyExistsForPincode = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
-    const { pincode, role } = req.body;
-    console.log(req.body);
+    const { pincode } = req.body;
     const checkPincode = await Employee.findOne({ where: { pincode: pincode, role: "mma" } });
 
     if (checkPincode) {
@@ -379,7 +383,7 @@ const getEmployeeDetails = async (req, res) => {
 
     const employee = await Employee.findOne({ where: { phone } });
     if (!employee) {
-      return res.status(401).json({ error: "wrong phone phone" });
+      return res.status(401).json({ error: "Invalid phone number" });
     }
 
     const { ...employeeDetails } = employee.dataValues;
@@ -460,6 +464,11 @@ const generateOfferLetter = async (req, res) => {
 
     const employeeDetails = checkUser.dataValues;
     console.log(employeeDetails);
+    const name = employeeDetails.name.charAt(0).toUpperCase() + employeeDetails.name.slice(1);
+    const address = employeeDetails.address.charAt(0).toUpperCase() + employeeDetails.address.slice(1);
+    const city = employeeDetails.city.charAt(0).toUpperCase() + employeeDetails.city.slice(1);
+    const placeOfPosting =
+      employeeDetails.place_of_posting.charAt(0).toUpperCase() + employeeDetails.place_of_posting.slice(1);
 
     // Create the HTML content using the employee details
     const htmlContent = `
@@ -501,13 +510,13 @@ const generateOfferLetter = async (req, res) => {
           </style>
         </head>
         <body>
-          <h2>KKMart Offer Letter</h2>
+          <h2><u>KKMART OFFET LETTER<u></h2>
           <p>Joining Date: ${employeeDetails.addedon}</p>
-          <p><strong>${employeeDetails.name}</strong></p>
-          <p>${employeeDetails.address}</p>
-          <p>${employeeDetails.city}, ${employeeDetails.place_of_posting}, ${employeeDetails.pincode}</p>
+          <p><strong>${name}</strong></p>
+          <p>${address}</p>
+          <p>${city}, ${placeOfPosting}, ${employeeDetails.pincode}</p>
 
-          <p>Dear ${employeeDetails.name},</p>
+          <p>Dear ${name},</p>
 
           <p>
             Congratulations! We are pleased to confirm that you have been selected to work for KKMart. We are delighted to
@@ -516,7 +525,10 @@ const generateOfferLetter = async (req, res) => {
 
           <div class="offer-details">
             <p>
-              The position we are offering you is: <strong>${employeeDetails.role.toUpperCase()}</strong> 
+              The position we are offering you is: <strong>${employeeDetails.role
+                .toUpperCase()
+                .split("")
+                .join(".")}</strong> 
             </p>
           </div>
 
@@ -530,8 +542,8 @@ const generateOfferLetter = async (req, res) => {
 
     // Generate PDF using Puppeteer
     const browser = await puppeteer.launch({
-      // headless: true,
-      executablePath: "/usr/bin/chromium-browser",
+      headless: true,
+      // executablePath: "/usr/bin/chromium-browser",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -583,6 +595,6 @@ module.exports = {
   changePassword,
   uploadProfile,
   generateOfferLetter,
-  checkPhoneAlreadyExists,
-  checkMMAalreadyExistasForPincode,
+  checkPhoneAlreadyExistsAndPincode,
+  checkMMAalreadyExistsForPincode,
 };

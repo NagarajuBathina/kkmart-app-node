@@ -7,7 +7,6 @@ const validateBeforeCreatingCustomer = async (req, res) => {
   try {
     const { Customer } = await connectTodb();
     const { phone, adhaar, smart_card_number } = req.body;
-    console.log(req.body);
     const exitstingPhone = await Customer.findOne({ where: { phone } });
     if (exitstingPhone) {
       return res.status(400).json({ error: "Phone number already exists" });

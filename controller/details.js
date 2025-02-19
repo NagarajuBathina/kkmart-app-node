@@ -7,7 +7,7 @@ const getDetailsByRole = async (req, res) => {
     const { refferalCode, role } = req.body;
     let fetchedData;
 
-    if (role != "sma" || role != "jma") {
+    if (role !== "sma" && role !== "jma") {
       fetchedData = await Employee.findAll({
         where: {
           [Op.and]: [
@@ -26,7 +26,7 @@ const getDetailsByRole = async (req, res) => {
 
     return res.status(200).json({ data: fetchedData });
   } catch (e) {
-    console.error(e);
+    console.error("Error:", e);
     return res.status(500).json({ error: e.message });
   }
 };
@@ -59,7 +59,6 @@ const getAllCategoryDetailsById = async (req, res) => {
     } else {
       return res.status(400).json({ error: "no data found" });
     }
-    console.log(allMMAandAboveRolesData[0].refferel_code);
 
     // for(let i=0 ; i<allMMAandAboveRolesData.length ; i++){
     //   allMMAlist = [...allMMAandAboveRolesData[i].refferel_code]
@@ -127,10 +126,12 @@ const getAllCategoryDetailsById = async (req, res) => {
 const getCustomersDetailsBySMArole = async (req, res) => {
   try {
     const { Employee, Customer } = await connectTodb();
+    console.log(req.params.refferalCode);
     const jmaList = await Employee.findAll({ where: { joined_by: req.params.refferalCode, role: "jma" } });
     if (jmaList.length === 0 || !jmaList) {
       res.status(400).json({ error: "No JMA data found" });
     }
+
     let allCustomerData = [];
 
     for (const jma of jmaList) {

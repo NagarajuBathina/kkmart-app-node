@@ -11,6 +11,10 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
+      father_name: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
       phone: {
         type: dataTypes.STRING,
         allowNull: false,
@@ -38,8 +42,48 @@ module.exports = (sequelize, dataTypes) => {
         unique: true,
         allowNull: false,
       },
+      address: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      pincode: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      caste: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      caste_category: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      dob: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      gender: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
       profile: {
         type: dataTypes.TEXT("long"),
+      },
+      nominee_name: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      nominee_phone: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      nominee_dob: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      nominee_relation: {
+        type: dataTypes.STRING,
+        allowNull: false,
       },
     },
     {
