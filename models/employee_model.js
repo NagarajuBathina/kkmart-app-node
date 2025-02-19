@@ -123,6 +123,9 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
+      gender: {
+        type: dataTypes.STRING,
+      },
     },
     {
       tableName: "app_employees",
