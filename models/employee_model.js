@@ -126,6 +126,15 @@ module.exports = (sequelize, dataTypes) => {
       gender: {
         type: dataTypes.STRING,
       },
+      one_time_income: {
+        type: dataTypes.DECIMAL,
+      },
+      monthly_income: {
+        type: dataTypes.DECIMAL,
+      },
+      yearly_income: {
+        type: dataTypes.DECIMAL,
+      },
     },
     {
       tableName: "app_employees",

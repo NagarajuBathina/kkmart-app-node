@@ -472,14 +472,15 @@ const uploadProfile = async (req, res) => {
 const generateOfferLetter = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
-    const checkUser = await Employee.findOne({ where: req.body.params });
+
+    const checkUser = await Employee.findOne({ where: req.params });
 
     if (!checkUser) {
       return req.status(400).json({ error: "no data found" });
     }
 
     const employeeDetails = checkUser.dataValues;
-    console.log(employeeDetails);
+    const joiningDate = employeeDetails.addedon.split(" ")[0];
     const name = employeeDetails.name.charAt(0).toUpperCase() + employeeDetails.name.slice(1);
     const address = employeeDetails.address.charAt(0).toUpperCase() + employeeDetails.address.slice(1);
     const city = employeeDetails.city.charAt(0).toUpperCase() + employeeDetails.city.slice(1);
@@ -527,7 +528,7 @@ const generateOfferLetter = async (req, res) => {
         </head>
         <body>
           <h2><u>KKMART OFFER LETTER</u></h2>
-          <p>Joining Date: ${employeeDetails.addedon}</p>
+          <p>Joining Date: ${joiningDate}</p>
           <p><strong>${name}</strong></p>
           <p>${address}</p>
           <p>${city}, ${placeOfPosting}, ${employeeDetails.pincode}</p>
@@ -599,7 +600,31 @@ const generateOfferLetter = async (req, res) => {
     }
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// update employee details
+const updateEmployeeDetails = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ error: "Phone number is required" });
+    }
+
+    // Update employee details
+    const [updated] = await Employee.update(req.body, { where: { phone } });
+
+    if (updated === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    return res.status(200).json({ message: "Updated successfully" });
+  } catch (error) {
+    console.error("Error updating employee details:", error);
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -613,4 +638,5 @@ module.exports = {
   generateOfferLetter,
   checkPhoneAlreadyExists,
   checkMMAalreadyExistsForPincode,
+  updateEmployeeDetails,
 };

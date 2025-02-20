@@ -1,6 +1,6 @@
 module.exports = (sequelize, dataTypes) => {
   const Renewal = sequelize.define(
-    "monthly_renewals",
+    "app_monthly_renewals",
     {
       slno: {
         type: dataTypes.INTEGER,
@@ -36,7 +36,7 @@ module.exports = (sequelize, dataTypes) => {
       },
     },
     {
-      table: "monthly_renewals",
+      table: "app_monthly_renewals",
       timestamps: false,
     }
   );

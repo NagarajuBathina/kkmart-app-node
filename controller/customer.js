@@ -67,7 +67,7 @@ const processEarnings = async (joined_by, employee, transaction) => {
   const joinedByJMAdata = await fetchJoinedByData(joined_by, employee);
   const jmaEarnings = 50;
 
-  await updateData(joinedByJMAdata.phone, jmaEarnings, employee, transaction);
+  await updateData(joinedByJMAdata.phone, jmaEarnings, employee, transaction, jmaEarnings);
   await employee.update(
     { customer_count: joinedByJMAdata.customer_count + 1 },
     { where: { phone: joinedByJMAdata.phone }, transaction }
@@ -77,7 +77,7 @@ const processEarnings = async (joined_by, employee, transaction) => {
   if (joinedByJMAdata.position <= 8) {
     const smaEarnings = 20;
 
-    await updateData(joinedBySMAdata.phone, smaEarnings, employee, transaction);
+    await updateData(joinedBySMAdata.phone, smaEarnings, employee, transaction, smaEarnings);
     await employee.update(
       { customer_count: joinedBySMAdata.customer_count + 1 },
       { where: { phone: joinedBySMAdata.phone }, transaction }
@@ -89,7 +89,7 @@ const processEarnings = async (joined_by, employee, transaction) => {
     if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count === 0) {
       const mmaEarnings = 10;
 
-      await updateData(joinedByMMAdata.phone, mmaEarnings, employee, transaction);
+      await updateData(joinedByMMAdata.phone, mmaEarnings, employee, transaction, mmaEarnings);
       await employee.update(
         { customer_count: joinedByMMAdata.customer_count + 1 },
         { where: { phone: joinedByMMAdata.phone }, transaction }
@@ -97,7 +97,7 @@ const processEarnings = async (joined_by, employee, transaction) => {
     } else if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count > 0) {
       const mmaEarnings = 5;
 
-      await updateData(joinedByMMAdata.phone, mmaEarnings, employee, transaction);
+      await updateData(joinedByMMAdata.phone, mmaEarnings, employee, transaction, mmaEarnings);
       await employee.update(
         { customer_count: joinedByMMAdata.customer_count + 1 },
         { where: { phone: joinedByMMAdata.phone }, transaction }
@@ -201,7 +201,7 @@ const fetchJoinedByData = async (joinedBy, employee) => {
   return joinedByDetails;
 };
 
-const updateData = async (phone, amount, employee, transaction) => {
+const updateData = async (phone, amount, employee, transaction, oneTimeIncome = null) => {
   try {
     const checkUser = await employee.findOne({ where: { phone: phone }, transaction });
     if (!checkUser) {
@@ -219,22 +219,27 @@ const updateData = async (phone, amount, employee, transaction) => {
     const existingDate = new Date(checkUser.dataValues.date);
     console.log(existingDate.toDateString());
 
+    // Prepare the update object
+    const updateFields = {
+      earnings: newEarnings,
+      daily_earnings: amount,
+      date: currentDate,
+    };
+
+    // Check if oneTimeIncome is provided in the request body
+    if (oneTimeIncome !== null) {
+      updateFields.one_time_income = oneTimeIncome;
+    }
+
     if (existingDate.toDateString() !== currentDate.toDateString()) {
       // Update daily earnings with the amount and set the date to current date
-      await employee.update(
-        {
-          earnings: newEarnings,
-          daily_earnings: amount,
-          date: currentDate,
-        },
-        { where: { id: checkUser.dataValues.id }, transaction }
-      );
+      await employee.update(updateFields, { where: { id: checkUser.dataValues.id }, transaction });
     } else {
       // Update daily earnings by adding the amount to the existing daily earnings
       const dailyEarnings = parseFloat(checkUser.dataValues.daily_earnings) || 0;
       await employee.update(
         {
-          earnings: newEarnings,
+          ...updateFields,
           daily_earnings: dailyEarnings + amount,
         },
         { where: { id: checkUser.dataValues.id }, transaction }
