@@ -3,21 +3,25 @@ const connectTodb = require("../misc/db");
 
 const getDetailsByRole = async (req, res) => {
   try {
-    const { Employee } = await connectTodb();
+    const { Employee, Customer } = await connectTodb();
     const { refferalCode, role } = req.body;
+    console.log(req.body);
+
     let fetchedData;
 
     if (role !== "sma" && role !== "jma") {
       fetchedData = await Employee.findAll({
         where: {
           [Op.and]: [
-            { [Op.or]: [{ role: "mma" }, { role: "smh" }, { role: "zmh" }, { role: "dmh" }] },
+            { [Op.or]: [{ role: "mma" }, { role: "smh" }, { role: "zmh" }, { role: "dmh" }, { role: "sma" }] },
             { joined_by: refferalCode },
           ],
         },
       });
-    } else {
-      fetchedData = await Employee.findAll({ where: { joined_by: refferalCode, role: role } });
+    } else if (role === "sma") {
+      fetchedData = await Employee.findAll({ where: { joined_by: refferalCode, role: "jma" } });
+    } else if (role === "jma") {
+      fetchedData = await Customer.findAll({ where: { joined_by: refferalCode } });
     }
 
     if (!fetchedData || fetchedData.length === 0) {
