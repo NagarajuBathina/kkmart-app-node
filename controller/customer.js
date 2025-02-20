@@ -146,7 +146,7 @@ const customerMonthlyRenewal = async (req, res) => {
     try {
       joinedByJMAdata = await fetchJoinedByData(customerData.joined_by, Employee);
       const jmaEarnings = 27.5;
-      await updateData(joinedByJMAdata.phone, jmaEarnings, Employee, transaction);
+      await updateData(joinedByJMAdata.phone, jmaEarnings, Employee, transaction, null, jmaEarnings);
     } catch (error) {
       await transaction.rollback();
       return res.status(400).json({ error: error.message });
@@ -157,7 +157,7 @@ const customerMonthlyRenewal = async (req, res) => {
       console.log("JMA position not in range, commission not adding to SMA");
     } else {
       const smaEarnings = 10;
-      await updateData(joinedBySMAdata.phone, smaEarnings, Employee, transaction);
+      await updateData(joinedBySMAdata.phone, smaEarnings, Employee, transaction, null, smaEarnings);
     }
 
     joinedByMMAdata = await fetchJoinedByData(joinedBySMAdata.joined_by, Employee);
@@ -179,7 +179,7 @@ const customerMonthlyRenewal = async (req, res) => {
         default:
           mmaEarnings = 0;
       }
-      await updateData(joinedByMMAdata.phone, mmaEarnings, Employee, transaction);
+      await updateData(joinedByMMAdata.phone, mmaEarnings, Employee, transaction, null, mmaEarnings);
     } else {
       console.log("SMA position not in range, commission not adding to MMA");
     }
@@ -201,7 +201,7 @@ const fetchJoinedByData = async (joinedBy, employee) => {
   return joinedByDetails;
 };
 
-const updateData = async (phone, amount, employee, transaction, oneTimeIncome = null) => {
+const updateData = async (phone, amount, employee, transaction, oneTimeIncome = null, monthlyIncome = null) => {
   try {
     const checkUser = await employee.findOne({ where: { phone: phone }, transaction });
     if (!checkUser) {
@@ -229,6 +229,9 @@ const updateData = async (phone, amount, employee, transaction, oneTimeIncome = 
     // Check if oneTimeIncome is provided in the request body
     if (oneTimeIncome !== null) {
       updateFields.one_time_income = oneTimeIncome;
+    }
+    if (monthlyIncome !== null) {
+      updateFields.monthly_income = monthlyIncome;
     }
 
     if (existingDate.toDateString() !== currentDate.toDateString()) {
