@@ -228,6 +228,11 @@ const createEmployee = async (req, res) => {
         { jma_count: (joinedbyDetails.jma_count || 0) + 1 },
         { where: { refferel_code: joined_by }, transaction }
       );
+      mmaDetails = await fetchJoinedByDetails(joinedbyDetails.joined_by, Employee, transaction);
+      await Employee.update(
+        { jma_count: (mmaDetails.jma_count || 0) + 1 },
+        { where: { refferel_code: mmaDetails.refferel_code }, transaction }
+      );
     } else if (role === "sma" && joinedbyDetails.role !== "jma") {
       req.body.position = 1 + (joinedbyDetails.sma_count || 0);
       newEmployee = await Employee.create(req.body, { transaction });
@@ -545,7 +550,7 @@ const generateOfferLetter = async (req, res) => {
               The position we are offering you is: <strong>${employeeDetails.role
                 .toUpperCase()
                 .split("")
-                .join(".")}</strong> 
+                .join(".")}.</strong> 
             </p>
           </div>
 

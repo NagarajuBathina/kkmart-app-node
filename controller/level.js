@@ -55,6 +55,8 @@ const getMMAlevelsList = async (req, res) => {
 
     const fetchedData = await fetchReferrals(1, refferalCode);
 
+    console.log(fetchedData.length);
+
     return res.status(200).json({ data: fetchedData });
   } catch (e) {
     console.error(e);

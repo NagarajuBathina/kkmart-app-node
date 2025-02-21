@@ -1,4 +1,4 @@
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const connectTodb = require("../misc/db");
 
 const getDetailsByRole = async (req, res) => {
@@ -57,7 +57,7 @@ const getAllCategoryDetailsById = async (req, res) => {
       },
     });
 
-    console.log(req.params.refferalCode);
+    console.log(mmaList.length);
 
     // Store MMA data if available
     if (mmaList && mmaList.length > 0) {
@@ -125,6 +125,71 @@ const getAllCategoryDetailsById = async (req, res) => {
   }
 };
 
+const getCustomersForMMAandAbove = async (req, res) => {
+  try {
+    const { Employee, Customer } = await connectTodb();
+
+    let allMMAandAboveRolesData = [];
+    let allSMAdata = [];
+    let allJMAdata = [];
+    let allCustomerData = [];
+    let smaList = [];
+    let jmaList = [];
+
+    // Get sma list
+    smaList = await Employee.findAll({
+      where: { role: "sma", joined_by: req.params.refferalCode },
+    });
+
+    // Store MMA data if available
+    if (smaList && smaList.length > 0) {
+      allMMAandAboveRolesData = [...smaList];
+    } else {
+      return res.status(400).json({ error: "no sma data found" });
+    }
+
+    // Get unique SMAs using Set
+    const smaSet = new Set();
+    // If MMA list exists, get their SMAs
+    if (smaList && smaList.length > 0) {
+      for (const sma of smaList) {
+        jmaList = await Employee.findAll({
+          where: { role: "jma", joined_by: sma.dataValues.refferel_code },
+        });
+        smaList.forEach((sma) => smaSet.add(JSON.stringify(sma)));
+      }
+    }
+    allSMAdata = Array.from(smaSet).map((sma) => JSON.parse(sma));
+
+    // Get JMAs for all SMAs if SMAs exist
+    if (allSMAdata.length > 0) {
+      for (const sma of allSMAdata) {
+        jmaList = await Employee.findAll({ where: { joined_by: sma.refferel_code, role: "jma" } });
+        allJMAdata = [...allJMAdata, ...jmaList];
+      }
+    }
+
+    // Get customers for all JMAs if JMAs exist
+    if (allJMAdata.length > 0) {
+      for (const jma of allJMAdata) {
+        const customerList = await Customer.findAll({
+          where: { joined_by: jma.refferel_code },
+        });
+        allCustomerData = [...allCustomerData, ...customerList];
+      }
+    }
+    return res.status(200).json({
+      data: {
+        smaData: allMMAandAboveRolesData,
+        jmaData: allJMAdata,
+        customerData: allCustomerData,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
 const getCustomersDetailsBySMArole = async (req, res) => {
   try {
     const { Employee, Customer } = await connectTodb();
@@ -172,4 +237,5 @@ module.exports = {
   getAllCategoryDetailsById,
   getCustomersDetails,
   getCustomersDetailsBySMArole,
+  getCustomersForMMAandAbove,
 };
