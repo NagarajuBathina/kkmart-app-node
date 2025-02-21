@@ -57,16 +57,14 @@ const getAllCategoryDetailsById = async (req, res) => {
       },
     });
 
+    console.log(req.params.refferalCode);
+
     // Store MMA data if available
     if (mmaList && mmaList.length > 0) {
       allMMAandAboveRolesData = [...mmaList];
     } else {
-      return res.status(400).json({ error: "no data found" });
+      console.log("no mma data found");
     }
-
-    // for(let i=0 ; i<allMMAandAboveRolesData.length ; i++){
-    //   allMMAlist = [...allMMAandAboveRolesData[i].refferel_code]
-    // }
 
     // Get unique SMAs using Set
     const smaSet = new Set();
@@ -132,8 +130,9 @@ const getCustomersDetailsBySMArole = async (req, res) => {
     const { Employee, Customer } = await connectTodb();
     console.log(req.params.refferalCode);
     const jmaList = await Employee.findAll({ where: { joined_by: req.params.refferalCode, role: "jma" } });
+    console.log(jmaList);
     if (jmaList.length === 0 || !jmaList) {
-      res.status(400).json({ error: "No JMA data found" });
+      return res.status(400).json({ error: "No JMA data found" });
     }
 
     let allCustomerData = [];
@@ -143,7 +142,7 @@ const getCustomersDetailsBySMArole = async (req, res) => {
       allCustomerData = [...allCustomerData, ...customerList];
     }
     if (allCustomerData.length === 0) {
-      return res.status(400).json({ error: "No customer data available" });
+      console.log("no customer data available");
     }
     res.status(200).json({ data: { customerdata: allCustomerData, jmadata: jmaList } });
   } catch (e) {

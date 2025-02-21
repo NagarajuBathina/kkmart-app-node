@@ -67,7 +67,7 @@ const processEarnings = async (joined_by, employee, transaction) => {
   const joinedByJMAdata = await fetchJoinedByData(joined_by, employee);
   const jmaEarnings = 50;
 
-  await updateData(joinedByJMAdata.phone, jmaEarnings, employee, transaction, jmaEarnings);
+  await updateData(joinedByJMAdata.phone, jmaEarnings, employee, transaction, jmaEarnings, null);
   await employee.update(
     { customer_count: joinedByJMAdata.customer_count + 1 },
     { where: { phone: joinedByJMAdata.phone }, transaction }
@@ -77,36 +77,44 @@ const processEarnings = async (joined_by, employee, transaction) => {
   if (joinedByJMAdata.position <= 8) {
     const smaEarnings = 20;
 
-    await updateData(joinedBySMAdata.phone, smaEarnings, employee, transaction, smaEarnings);
+    await updateData(joinedBySMAdata.phone, smaEarnings, employee, transaction, smaEarnings, null);
     await employee.update(
       { customer_count: joinedBySMAdata.customer_count + 1 },
       { where: { phone: joinedBySMAdata.phone }, transaction }
     );
   }
+  let mmaJoinedBy = joinedBySMAdata.joined_by;
+  let loopCount = 0;
 
-  const joinedByMMAdata = await fetchJoinedByData(joinedBySMAdata.joined_by, employee);
-  try {
-    if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count === 0) {
-      const mmaEarnings = 10;
+  console.log(mmaJoinedBy);
 
-      await updateData(joinedByMMAdata.phone, mmaEarnings, employee, transaction, mmaEarnings);
-      await employee.update(
-        { customer_count: joinedByMMAdata.customer_count + 1 },
-        { where: { phone: joinedByMMAdata.phone }, transaction }
-      );
-    } else if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count > 0) {
-      const mmaEarnings = 5;
+  while (mmaJoinedBy) {
+    const joinedByMMAdata = await fetchJoinedByData(mmaJoinedBy, employee);
+    try {
+      let mmaEarnings;
+      if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count === 0 && loopCount === 0) {
+        mmaEarnings = 10;
+      } else if (joinedBySMAdata.position <= 7 && joinedByMMAdata.mma_count > 0 && loopCount === 0) {
+        mmaEarnings = 5;
+      } else if (loopCount !== 0) {
+        mmaEarnings = 5;
+      }
 
-      await updateData(joinedByMMAdata.phone, mmaEarnings, employee, transaction, mmaEarnings);
-      await employee.update(
-        { customer_count: joinedByMMAdata.customer_count + 1 },
-        { where: { phone: joinedByMMAdata.phone }, transaction }
-      );
+      if (mmaEarnings) {
+        await updateData(joinedByMMAdata.phone, mmaEarnings, employee, transaction, mmaEarnings, null);
+        await employee.update(
+          { customer_count: joinedByMMAdata.customer_count + 1 },
+          { where: { phone: joinedByMMAdata.phone }, transaction }
+        );
+      }
+
+      mmaJoinedBy = joinedByMMAdata.joined_by;
+      loopCount++;
+    } catch (error) {
+      console.error("Error updating earnings:", error);
+      await transaction.rollback();
+      throw error;
     }
-  } catch (error) {
-    console.error("Error updating earnings:", error);
-    await transaction.rollback();
-    throw error;
   }
 };
 
@@ -131,7 +139,7 @@ const customerMonthlyRenewal = async (req, res) => {
   try {
     const { Customer, Employee, Renewal } = await connectTodb();
     const { joined_by, phone } = req.body;
-    let joinedByJMAdata, joinedBySMAdata, joinedByMMAdata;
+    let joinedByJMAdata, joinedBySMAdata, joinedByMMAdata, joinedBy, loopCount;
 
     const customerData = await Customer.findOne({ where: { phone } });
     if (!customerData) {
@@ -142,6 +150,7 @@ const customerMonthlyRenewal = async (req, res) => {
       return res.status(400).json({ error: "your are not allowed to renew this customer" });
     }
 
+    // create renewal record
     await Renewal.create(req.body, { transaction });
     try {
       joinedByJMAdata = await fetchJoinedByData(customerData.joined_by, Employee);
@@ -159,9 +168,11 @@ const customerMonthlyRenewal = async (req, res) => {
       const smaEarnings = 10;
       await updateData(joinedBySMAdata.phone, smaEarnings, Employee, transaction, null, smaEarnings);
     }
+    joinedBy = joinedBySMAdata.joined_by;
+    loopCount = 0;
 
-    joinedByMMAdata = await fetchJoinedByData(joinedBySMAdata.joined_by, Employee);
-    if (joinedBySMAdata.position <= 7) {
+    while (joinedBy) {
+      joinedByMMAdata = await fetchJoinedByData(joinedBy, Employee);
       let mmaEarnings;
       switch (joinedByMMAdata.role) {
         case "mma":
@@ -179,9 +190,15 @@ const customerMonthlyRenewal = async (req, res) => {
         default:
           mmaEarnings = 0;
       }
-      await updateData(joinedByMMAdata.phone, mmaEarnings, Employee, transaction, null, mmaEarnings);
-    } else {
-      console.log("SMA position not in range, commission not adding to MMA");
+      if (joinedBySMAdata.position <= 7 && loopCount === 0) {
+        await updateData(joinedByMMAdata.phone, mmaEarnings, Employee, transaction, null, mmaEarnings);
+      } else if (loopCount !== 0) {
+        await updateData(joinedByMMAdata.phone, mmaEarnings, Employee, transaction, null, mmaEarnings);
+      } else {
+        console.log("SMA position not in range, commission not adding to MMA");
+      }
+      joinedBy = joinedByMMAdata.joined_by;
+      loopCount++;
     }
 
     await transaction.commit(); // Commit the transaction if all operations succeed
@@ -214,6 +231,9 @@ const updateData = async (phone, amount, employee, transaction, oneTimeIncome = 
     const newEarnings = earnings + parseFloat(amount);
     console.log(newEarnings);
 
+    const oneTimeEarning = parseFloat(checkUser.one_time_income) + parseFloat(amount);
+    const monthlyEarning = parseFloat(checkUser.monthly_income) + parseFloat(amount);
+
     const currentDate = new Date();
     console.log(currentDate.toDateString());
     const existingDate = new Date(checkUser.dataValues.date);
@@ -228,10 +248,11 @@ const updateData = async (phone, amount, employee, transaction, oneTimeIncome = 
 
     // Check if oneTimeIncome is provided in the request body
     if (oneTimeIncome !== null) {
-      updateFields.one_time_income = oneTimeIncome;
+      updateFields.one_time_income = oneTimeEarning;
     }
+    // Check if monthlyIncome is provided in the request body
     if (monthlyIncome !== null) {
-      updateFields.monthly_income = monthlyIncome;
+      updateFields.monthly_income = monthlyEarning;
     }
 
     if (existingDate.toDateString() !== currentDate.toDateString()) {
@@ -296,7 +317,25 @@ const getRenewalHistory = async (req, res) => {
   try {
     const { Renewal } = await connectTodb();
     const fetchedData = await Renewal.findAll({
-      where: { joined_by: req.params.joined_by },
+      where: { joined_by: req.params.joined_by, amount: 100 },
+      order: [["addedon", "DESC"]],
+    });
+    if (!fetchedData || fetchedData.length === 0) {
+      return res.status(400).json({ data: "No data found" });
+    }
+    return res.status(200).json({ data: fetchedData });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+// get customer payment history
+const getCustomerPaymentHistory = async (req, res) => {
+  try {
+    const { Renewal } = await connectTodb();
+    console.log(req.params.joined_by);
+    const fetchedData = await Renewal.findAll({
+      where: { joined_by: req.params.joined_by, amount: 650 },
       order: [["addedon", "DESC"]],
     });
     if (!fetchedData || fetchedData.length === 0) {
@@ -315,4 +354,5 @@ module.exports = {
   validateBeforeCreatingCustomer,
   getRenewalHistory,
   uploadProfileforCustomer,
+  getCustomerPaymentHistory,
 };
