@@ -497,6 +497,11 @@ const generateOfferLetter = async (req, res) => {
     const imageBase64 = await fs.readFile(imagePath, { encoding: "base64" });
     const imageSrc = `data:image/png;base64,${imageBase64}`;
 
+    let designation;
+    if (role === "mma") {
+      designation = "MANDAL ";
+    }
+
     // Create the HTML content using the employee details
     const htmlContent = `
       <!DOCTYPE html>
@@ -514,11 +519,13 @@ const generateOfferLetter = async (req, res) => {
       }
       .container {
         width: 100%;
-        max-width: 800px;
+        max-width: 750px;
         margin: 40px auto;
-        padding: 20px;
-        background-color: #fff;
+        padding: 20px 20px 40px 20px;
         position: relative;
+        height:1000px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
       }
       .header {
         text-align: center;
@@ -539,16 +546,20 @@ const generateOfferLetter = async (req, res) => {
         width: 100px;
         height: 100px;
         display: flex;
-        align-items: center;
+        flex-direction:column;
+        align-items: start;
         justify-content: center;
         background: #f3f3f3;
+      }
+
+      .photo p{
+      line-height: 1.2;
       }
       .details p {
         margin: 5px 0;
       }
       .offer-details {
         margin-top: 20px;
-        padding: 10px;
       }
       .signature {
         width:100%;
@@ -559,24 +570,33 @@ const generateOfferLetter = async (req, res) => {
       .header h5 {
         margin: 0;
         padding: 0;
-        line-height: 1.2; /* Adjust line height for better spacing */
+        line-height: 1.2;
         text-align: center;
+      }
+      .signature-div p {
+        line-height: 0.4;
+        display:flex;
+        justify-content: center;
       }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <h1>K K MART</h1>
-        <h4>C/o. KISHAN AND KARMIK WELFARE MUTUALLY AIDED COOPERATIVE SOCIETY LIMITED.</h4>
+        <h1 style="color:green">K <span style="color:rgb(128, 0, 0)">K</span> MART</h1>
+        <h4 style="color:rgb(128, 0, 0)">C/o. KISHAN AND KARMIK WELFARE MUTUALLY AIDED COOPERATIVE SOCIETY LIMITED.</h4>
         <h5>GROUND FLOOR, BUILDING NO: 519/3, REVATHIPATHI STREET, TOLUSURUPALLE,</h5>
         <h5>TEKKALI, SRIKAKULAM DISTRICT, ANDHRA PRADESH - 532201</h5>
         <h5>REGD NO: 114 of 2024 | GSTN No: 37ABCFK8935H1ZZ</h5>
       </div>
 
+      <div style="border: black solid 3px; border-style: dotted;display:flex;justify-content: center; align-items: center; height:30px;margin-top:20px">
+      <p><u>OFFER LETTER</u></p>
+      </div>
+
       <div class="info-section">
         <div class="details">
-          <p>ID: ${employeeDetails.id}</p>
+         <p>Date of Joining: ${joiningDate}</p>
           <p>Name: <strong>${name}</strong></p>
           <p>Address: ${address}</p>
           <p>District: ${district}</p>
@@ -584,7 +604,10 @@ const generateOfferLetter = async (req, res) => {
           <p>PIN Code: ${employeeDetails.pincode}</p>
           <p>Contact No: +91 ${employeeDetails.phone}</p>
         </div>
-        <div class="photo"><img src="${employeeDetails.profile}" width="100" height="100" /></div>
+        <div class="photo">
+         <p>ID: ${employeeDetails.id}</p>
+        <img src="${employeeDetails.profile}" width="100" height="100" />
+        </div>
       </div>
 
       <p>Dear ${name},</p>
@@ -592,34 +615,34 @@ const generateOfferLetter = async (req, res) => {
       &nbsp;&nbsp;&nbsp;&nbsp; We are please to inform you that based on our selection process you are provisionally selected for the post of <strong>${role}.</strong> for a probationary period of after successful and satisfactory completion of the probationary period and fulfilment of your target, the Job will be renewed for permanent position in the Society with the new terms and conditions. This offer is active with effect from the date of joining on the following terms and conditions.
       </p>
 
-      <div class="offer-details">
+      <div class="offer-details" >
         <p>
           <strong>JOB TITLE:</strong> Your job title will be <strong>${role}.</strong> and you will report daily at
           <strong>5 PM</strong> to the HEAD OFFICE.
         </p>
-        <p>
+        <p style='text-align: justify'>
           <strong>INCENTIVES AND COMMISSION:</strong> Your estimated commission will be on a per-membership basis as set
           by the Society.
         </p>
         <p><strong>PLACE OF POSTING:</strong> ${placeOfPosting}</p>
-        <p>
+        <p style='text-align: justify'>
           <strong>TERMINATION OF ASSOCIATE:</strong> If you do not meet the Society’s expectations, there will be no
           payment claim, and your job will be terminated if no improvement is observed during the 15-day period. The
           processing fee of <strong>Rs. 2950</strong> is non-refundable.
         </p>
       </div>
 
-      <p>
+      <p style='text-align: justify'>
         This offer letter is given to you according to our own terms and conditions, which may change in future if desired so by the society.
       </p>
-      <p>This offer is being issued to you in two counterparts. You may acknowledge your acceptence of the terms and contained herein by signing one counterpart and returning it to us.</p>
+      <p style='text-align: justify'>This offer is being issued to you in two counterparts. You may acknowledge your acceptence of the terms and contained herein by signing one counterpart and returning it to us.</p>
       <p>We look forword to your best performance.</p>
 
       <div class="signature" style="display: flex; justify-content: space-between; align-items: flex-end;">
         <div style=" text-align: left">
           <p><strong>Signature of Associate</strong></p>
         </div>
-        <div style=" text-align: right">
+        <div style=" text-align: right" class="signature-div">
          <p>Kishan and Karmic Welfare</p>
          <p>Mutually Aided</p>
          <p>Cooperative Society Ltd.</p>
