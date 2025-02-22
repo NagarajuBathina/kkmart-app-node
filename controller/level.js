@@ -1,25 +1,6 @@
 const { where, Op } = require("sequelize");
 const connectTodb = require("../misc/db");
 
-const getMMAlist = async (req, res) => {
-  try {
-    const { Employee } = await connectTodb();
-
-    const fetchedData = await Employee.findAll({
-      where: {
-        [Op.and]: [
-          { [Op.or]: [{ role: "mma" }, { role: "smh" }, { role: "zmh" }, { role: "dmh" }] },
-          { joined_by: req.params.refferalCode },
-        ],
-      },
-    });
-    return res.status(200).json({ data: fetchedData });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ error: e.message });
-  }
-};
-
 // get mma level wise list
 const getMMAlevelsList = async (req, res) => {
   try {
@@ -41,7 +22,7 @@ const getMMAlevelsList = async (req, res) => {
       });
 
       if (currentLevel === levelCount) {
-        return referrals; // Return only the last level's referrals
+        return referrals;
       }
 
       let allReferrals = [];
@@ -63,4 +44,50 @@ const getMMAlevelsList = async (req, res) => {
     return res.status(500).json({ error: e.message });
   }
 };
+
+// get level list
+const getMMAlist = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    let levelData = {};
+    let refferelCodes = [];
+
+    // Function to fetch referrals recursively
+    const fetchAllReferrals = async (referralCode, currentLevel) => {
+      const referrals = await Employee.findAll({
+        where: {
+          [Op.and]: [
+            { [Op.or]: [{ role: "mma" }, { role: "smh" }, { role: "zmh" }, { role: "dmh" }] },
+            { joined_by: referralCode },
+          ],
+        },
+      });
+
+      // Store the level data
+      if (referrals.length > 0) {
+        refferelCodes.push(...referrals.map((ref) => ref.refferel_code));
+
+        // Store the level information
+        levelData[`level${currentLevel}`] = {
+          level: currentLevel,
+          length: referrals.length,
+        };
+
+        // Recursively fetch referrals for the new referral codes
+        for (const code of referrals.map((ref) => ref.refferel_code)) {
+          await fetchAllReferrals(code, currentLevel + 1);
+        }
+      }
+    };
+
+    // Start fetching referrals from the initial referral code
+    await fetchAllReferrals(req.params.refferalCode, 1);
+
+    return res.status(200).json({ data: { ...levelData } });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = { getMMAlist, getMMAlevelsList };
