@@ -497,9 +497,23 @@ const generateOfferLetter = async (req, res) => {
     const imageBase64 = await fs.readFile(imagePath, { encoding: "base64" });
     const imageSrc = `data:image/png;base64,${imageBase64}`;
 
+    const imagePath2 = path.join(__dirname, "../assets/logo2.png");
+    const imageBase642 = await fs.readFile(imagePath2, { encoding: "base64" });
+    const imageSrc2 = `data:image/png;base64,${imageBase642}`;
+
     let designation;
-    if (role === "mma") {
-      designation = "MANDAL ";
+    if (employeeDetails.role === "mma") {
+      designation = "MANDAL MARKETING ASSOCIATE";
+    } else if (employeeDetails.role === "sma") {
+      designation = "SENIOR MARKETING ASSOCIATE";
+    } else if (employeeDetails.role === "jma") {
+      designation = "JUNIOR MARKETING ASSOCIATE";
+    } else if (employeeDetails.role === "dmh") {
+      designation = "DISTRICT MARKETING HEAD";
+    } else if (employeeDetails.role === "zmh") {
+      designation = "ZONAL MARKETING HEAD";
+    } else if (employeeDetails.role === "smh") {
+      designation = "STATE MARKETING HEAD";
     }
 
     // Create the HTML content using the employee details
@@ -521,10 +535,9 @@ const generateOfferLetter = async (req, res) => {
         width: 100%;
         max-width: 750px;
         margin: 40px auto;
-        padding: 20px 20px 40px 20px;
+        padding: 20px 20px 20px 20px;
         position: relative;
         height:1000px;
-        border: 1px solid #ddd;
         border-radius: 10px;
       }
       .header {
@@ -540,7 +553,7 @@ const generateOfferLetter = async (req, res) => {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 20px;
+        margin-top: 10px;
       }
       .photo {
         width: 100px;
@@ -559,11 +572,11 @@ const generateOfferLetter = async (req, res) => {
         margin: 5px 0;
       }
       .offer-details {
-        margin-top: 20px;
+        margin-top: 5px;
       }
       .signature {
         width:100%;
-        margin-top: 30px;
+        margin-top: 5px;
       }
       .header h1,
       .header h4,
@@ -583,7 +596,8 @@ const generateOfferLetter = async (req, res) => {
   <body>
     <div class="container">
       <div class="header">
-        <h1 style="color:green">K <span style="color:rgb(128, 0, 0)">K</span> MART</h1>
+      <img src="${imageSrc2}" width="200" height="90" />
+       
         <h4 style="color:rgb(128, 0, 0)">C/o. KISHAN AND KARMIK WELFARE MUTUALLY AIDED COOPERATIVE SOCIETY LIMITED.</h4>
         <h5>GROUND FLOOR, BUILDING NO: 519/3, REVATHIPATHI STREET, TOLUSURUPALLE,</h5>
         <h5>TEKKALI, SRIKAKULAM DISTRICT, ANDHRA PRADESH - 532201</h5>
@@ -598,9 +612,7 @@ const generateOfferLetter = async (req, res) => {
         <div class="details">
          <p>Date of Joining: ${joiningDate}</p>
           <p>Name: <strong>${name}</strong></p>
-          <p>Address: ${address}</p>
-          <p>District: ${district}</p>
-          <p>State: ${employeeDetails.state}</p>
+          <p>Address: ${address},<br>${district},${employeeDetails.state}</p>
           <p>PIN Code: ${employeeDetails.pincode}</p>
           <p>Contact No: +91 ${employeeDetails.phone}</p>
         </div>
@@ -617,7 +629,7 @@ const generateOfferLetter = async (req, res) => {
 
       <div class="offer-details" >
         <p>
-          <strong>JOB TITLE:</strong> Your job title will be <strong>${role}.</strong> and you will report daily at
+          <strong>JOB TITLE:</strong> Your job title will be ${designation} (<strong>${role}.)</strong> and you will report daily at
           <strong>5 PM</strong> to the HEAD OFFICE.
         </p>
         <p style='text-align: justify'>
