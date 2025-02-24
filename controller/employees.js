@@ -535,7 +535,7 @@ const generateOfferLetter = async (req, res) => {
         width: 100%;
         max-width: 750px;
         margin: 40px auto;
-        padding: 20px 20px 20px 20px;
+        padding: 20px 0px 20px 0px;
         position: relative;
         height:1000px;
         border-radius: 10px;
@@ -596,7 +596,7 @@ const generateOfferLetter = async (req, res) => {
   <body>
     <div class="container">
       <div class="header">
-      <img src="${imageSrc2}" width="200" height="90" />
+      <img src="${imageSrc2}" width="200" height="100" />
        
         <h4 style="color:rgb(128, 0, 0)">C/o. KISHAN AND KARMIK WELFARE MUTUALLY AIDED COOPERATIVE SOCIETY LIMITED.</h4>
         <h5>GROUND FLOOR, BUILDING NO: 519/3, REVATHIPATHI STREET, TOLUSURUPALLE,</h5>
@@ -604,9 +604,9 @@ const generateOfferLetter = async (req, res) => {
         <h5>REGD NO: 114 of 2024 | GSTN No: 37ABCFK8935H1ZZ</h5>
       </div>
 
-      <div style="border: black solid 3px; border-style: dotted;display:flex;justify-content: center; align-items: center; height:30px;margin-top:20px">
-      <p><u>OFFER LETTER</u></p>
-      </div>
+    <div style="border: black solid 3px; border-style: dotted;display:flex;justify-content: center; align-items: center; height:30px;margin-top:20px">
+    <p><u>OFFER LETTER</u></p>
+    </div>
 
       <div class="info-section">
         <div class="details">
@@ -629,7 +629,7 @@ const generateOfferLetter = async (req, res) => {
 
       <div class="offer-details" >
         <p>
-          <strong>JOB TITLE:</strong> Your job title will be ${designation} (<strong>${role}.)</strong> and you will report daily at
+          <strong>JOB TITLE:</strong> Your job title will be <strong>${designation}</strong> (${role}.) and you will report daily at
           <strong>5 PM</strong> to the HEAD OFFICE.
         </p>
         <p style='text-align: justify'>
