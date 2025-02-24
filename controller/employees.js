@@ -537,7 +537,7 @@ const generateOfferLetter = async (req, res) => {
         max-width: 750px;
         margin: 40px auto;
         margin-top:0px;
-        padding: 20px 0px 20px 0px;
+        padding-top: 20px;
         position: relative;
         height:1000px;
         border-radius: 10px;
@@ -607,7 +607,7 @@ const generateOfferLetter = async (req, res) => {
         <h5>REGD NO: 114 of 2024 | GSTN No: 37ABCFK8935H1ZZ</h5>
       </div>
 
-    <div style="border: black solid 3px; border-style: dotted;display:flex;justify-content: center; align-items: center; height:30px;margin-top:20px">
+    <div style="border: black solid 3px; border-style: dotted;display:flex;justify-content: center; align-items: center; height:30px;margin-top:10px">
     <p><u>OFFER LETTER</u></p>
     </div>
 
@@ -661,7 +661,7 @@ const generateOfferLetter = async (req, res) => {
          <p>Kishan and Karmic Welfare</p>
          <p>Mutually Aided</p>
          <p>Cooperative Society Ltd.</p>
-         <img src="${imageSrc}" width="200" height="60" />
+         <img src="${imageSrc}" width="180" height="40" />
          <p>Managing Director</p>
         </div>
       </div>
