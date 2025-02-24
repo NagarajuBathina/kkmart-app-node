@@ -536,10 +536,12 @@ const generateOfferLetter = async (req, res) => {
         width: 100%;
         max-width: 750px;
         margin: 40px auto;
+        margin-top:0px;
         padding: 20px 0px 20px 0px;
         position: relative;
         height:1000px;
         border-radius: 10px;
+        
       }
       .header {
         text-align: center;
@@ -599,7 +601,7 @@ const generateOfferLetter = async (req, res) => {
       <div class="header">
       <img src="${imageSrc2}" width="200" height="100" />
        
-        <h4 style="color:rgb(128, 0, 0)">C/o. KISHAN AND KARMIK WELFARE MUTUALLY AIDED COOPERATIVE SOCIETY LIMITED.</h4>
+        <h5 style="color:rgb(128, 0, 0)">C/o. KISHAN AND KARMIK WELFARE MUTUALLY AIDED COOPERATIVE SOCIETY LIMITED.</h5>
         <h5>GROUND FLOOR, BUILDING NO: 519/3, REVATHIPATHI STREET, TOLUSURUPALLE,</h5>
         <h5>TEKKALI, SRIKAKULAM DISTRICT, ANDHRA PRADESH - 532201</h5>
         <h5>REGD NO: 114 of 2024 | GSTN No: 37ABCFK8935H1ZZ</h5>
