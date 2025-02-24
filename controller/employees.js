@@ -579,7 +579,7 @@ const generateOfferLetter = async (req, res) => {
       }
       .signature {
         width:100%;
-        margin-top: 5px;
+        margin-top: 0px;
       }
       .header h1,
       .header h4,
@@ -608,7 +608,7 @@ const generateOfferLetter = async (req, res) => {
       </div>
 
     <div style="border: black solid 3px; border-style: dotted;display:flex;justify-content: center; align-items: center; height:20px;margin-top:10px">
-    <p style='color:blue;font-weight:bold'><u>OFFER LETTER</u></p>
+    <p style='color:rgb(0, 0, 128);font-weight:bold'><u>OFFER LETTER</u></p>
     </div>
 
       <div class="info-section">
