@@ -607,8 +607,8 @@ const generateOfferLetter = async (req, res) => {
         <h5>REGD NO: 114 of 2024 | GSTN No: 37ABCFK8935H1ZZ</h5>
       </div>
 
-    <div style="border: black solid 3px; border-style: dotted;display:flex;justify-content: center; align-items: center; height:30px;margin-top:10px">
-    <p><u>OFFER LETTER</u></p>
+    <div style="border: black solid 3px; border-style: dotted;display:flex;justify-content: center; align-items: center; height:20px;margin-top:10px">
+    <p style='color:blue;font-weight:bold'><u>OFFER LETTER</u></p>
     </div>
 
       <div class="info-section">
@@ -742,6 +742,26 @@ const updateEmployeeDetails = async (req, res) => {
   }
 };
 
+//update today earnings
+const updateTodayEarnings = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { date, refferelCode } = req.body;
+    console.log(req.body);
+    const [updated] = await Employee.update(
+      { date: date, daily_earnings: 0 },
+      { where: { refferel_code: refferelCode } }
+    );
+    if (updated === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    return res.status(200).json({ message: "Updated successfully" });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = {
   createEmployee,
   checkUserDetailsBeforeCreating,
@@ -753,4 +773,5 @@ module.exports = {
   checkPhoneAlreadyExists,
   checkMMAalreadyExistsForPincode,
   updateEmployeeDetails,
+  updateTodayEarnings,
 };

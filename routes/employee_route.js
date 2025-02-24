@@ -13,6 +13,7 @@ router.get("/generate_offer_letter/:phone", controller.generateOfferLetter);
 router.post("/check_phone_already_exists", controller.checkPhoneAlreadyExists);
 router.post("/check_mma_pincode_already_exists", controller.checkMMAalreadyExistsForPincode);
 router.post("/update_employee_details", controller.updateEmployeeDetails);
+router.post("/update_today_earinings", controller.updateTodayEarnings);
 module.exports = router;
 
 // {
