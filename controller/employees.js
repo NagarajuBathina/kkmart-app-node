@@ -530,6 +530,7 @@ const generateOfferLetter = async (req, res) => {
         margin: 0;
         padding: 0;
         background-color: #fff;
+        border: solid grey 1px;
       }
       .container {
         width: 100%;
