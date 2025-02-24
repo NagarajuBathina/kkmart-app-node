@@ -13,6 +13,7 @@ const withdrawalRoute = require("./routes/withdrawal_route");
 const detailsRoute = require("./routes/details_route");
 const adminRoute = require("./routes/admin_route");
 const employeeBankDetailsRoute = require("./routes/bank_details_route");
+const searchRoute = require("./routes/practice_route");
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use(withdrawalRoute);
 app.use(detailsRoute);
 app.use(adminRoute);
 app.use(employeeBankDetailsRoute);
+app.use(searchRoute);
 
 app.use("/uploads", express.static("uploads"));
 
