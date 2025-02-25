@@ -23,8 +23,8 @@ const createEmployee = async (req, res) => {
     // Fetch details of the referrer
     joinedbyDetails = await fetchJoinedByDetails(joined_by, Employee, transaction);
 
-    if (amount < 3000) {
-      req.body.deductions = 3000 - amount;
+    if (amount < 2950) {
+      req.body.deductions = 2950 - amount;
     }
 
     if (
