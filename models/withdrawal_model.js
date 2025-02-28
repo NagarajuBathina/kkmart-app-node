@@ -31,6 +31,14 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
         allowNull: false,
       },
+      ac_no: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
+      ifsc_code: {
+        type: dataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       table: "app_withdrawls",

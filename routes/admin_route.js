@@ -6,6 +6,9 @@ router.get("/get_employee_data", controller.allEmployeesData);
 router.get("/get_all_monthly_renwal_data", controller.allMonthlyRenewalsData);
 router.get("/get_all_customer_data", controller.allCustomersData);
 router.get("/get_all_withdrawl_data", controller.allWithdrawlsData);
-router.get("/get_all_employee_payment_data", controller.allEmployeesPayments);
+router.get("/get_all_employee_payment_data", controller.allEmployeesPaymentsData);
+router.get("/get_employee_details_by_id/:phone", controller.EmployeeFullDetailsById);
+router.post("/update_employee_bankdetails_by_id", controller.updateEmployeeDetails);
+router.get("/get_dashboard_details", controller.getDashBoardDetails);
 
 module.exports = router;
