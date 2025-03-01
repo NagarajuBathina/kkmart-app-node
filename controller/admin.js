@@ -6,6 +6,31 @@ const allEmployeesData = async (req, res) => {
     const { Employee } = await connectTodb();
     const allData = await Employee.findAll({
       order: [["addedon", "DESC"]],
+      attributes: ["slno", "name", "father_name", "phone", "status", "role"],
+    });
+
+    if (!allData || allData.length === 0) {
+      return res.status(404).json({ message: "No employees found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: allData.length,
+      data: allData,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+const allRoleWiseEmployeesData = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const allData = await Employee.findAll({
+      where: { role: req.params.role },
+      order: [["addedon", "DESC"]],
+      attributes: ["slno", "name", "father_name", "phone", "status", "role"],
     });
 
     if (!allData || allData.length === 0) {
@@ -178,7 +203,6 @@ const getDashBoardDetails = async (req, res) => {
         acc[key] = [];
       }
       acc[key].push(customer);
-
       return acc;
     }, {});
 
@@ -209,6 +233,59 @@ const getDashBoardDetails = async (req, res) => {
   }
 };
 
+const getDayWiseCustomersCount = async (req, res) => {
+  try {
+    const { Customer } = await connectTodb();
+    const getCustomers = await Customer.findAll({ attributes: ["addedon"] });
+    if (!getCustomers || getCustomers.length === 0) {
+      return res.status(400).json({ error: "no customers data found" });
+    }
+
+    // Get the current date and the date 7 days ago
+    const currentDate = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+
+    // Filter customers who joined in the last 7 days
+    const customersLast7Days = getCustomers.filter((customer) => {
+      const addedonDate = new Date(customer.addedon);
+      return addedonDate >= sevenDaysAgo && addedonDate <= currentDate;
+    });
+
+    // Group customers by day
+    const customersByDay = customersLast7Days.reduce((acc, customer) => {
+      const date = new Date(customer.addedon);
+      const day = date.getDate();
+
+      if (!acc[day]) {
+        acc[day] = 0;
+      }
+      acc[day] += 1;
+
+      return acc;
+    }, {});
+
+    // Extract the length of each day's data
+    const dayWiseDataCounts = Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(sevenDaysAgo);
+      day.setDate(day.getDate() + i);
+      const dayNumber = day.getDate();
+      const monthNumber = day.getMonth() + 1;
+      return {
+        day: dayNumber,
+        count: customersByDay[dayNumber] || 0,
+        month: monthNumber,
+      };
+    });
+
+    return res.status(200).json({
+      data: dayWiseDataCounts,
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = {
   allEmployeesData,
   allMonthlyRenewalsData,
@@ -219,4 +296,6 @@ module.exports = {
   updateEmployeeDetails,
   updateEmployeeDetails,
   getDashBoardDetails,
+  getDayWiseCustomersCount,
+  allRoleWiseEmployeesData,
 };
