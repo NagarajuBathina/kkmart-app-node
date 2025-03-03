@@ -57,7 +57,7 @@ const getAllCategoryDetailsById = async (req, res) => {
       },
     });
 
-    console.log(mmaList.length);
+    // console.log(mmaList.length);
 
     // Store MMA data if available
     if (mmaList && mmaList.length > 0) {
@@ -95,6 +95,7 @@ const getAllCategoryDetailsById = async (req, res) => {
     }
     allSMAdata = Array.from(smaSet).map((sma) => JSON.parse(sma));
 
+
     // Get JMAs for all SMAs if SMAs exist
     if (allSMAdata.length > 0) {
       for (const sma of allSMAdata) {
@@ -103,6 +104,7 @@ const getAllCategoryDetailsById = async (req, res) => {
       }
     }
 
+    console.log(allJMAdata);
     // Get customers for all JMAs if JMAs exist
     if (allJMAdata.length > 0) {
       for (const jma of allJMAdata) {

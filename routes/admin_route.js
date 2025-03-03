@@ -12,5 +12,6 @@ router.post("/update_employee_bankdetails_by_id", controller.updateEmployeeDetai
 router.get("/get_dashboard_details", controller.getDashBoardDetails);
 router.get("/get_daywise_customers_count", controller.getDayWiseCustomersCount);
 router.get("/get_rolewise_employee_data/:role", controller.allRoleWiseEmployeesData);
+router.get("/get_sma_jma_customer_details/:refferalCode", controller.getSmaJmaCustomerDetails);
 
 module.exports = router;

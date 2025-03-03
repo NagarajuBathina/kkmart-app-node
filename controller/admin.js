@@ -286,6 +286,68 @@ const getDayWiseCustomersCount = async (req, res) => {
   }
 };
 
+const getSmaJmaCustomerDetails = async (req, res) => {
+  try {
+    const { Employee, Customer } = await connectTodb();
+
+    let allMMAandAboveRolesData = [];
+    let allSMAdata = [];
+    let allJMAdata = [];
+    let allCustomerData = [];
+    let smaList = [];
+    let jmaList = [];
+    const smaSet = new Set();
+
+    // If no MMAs, try to get SMAs directly
+    const directSmaList = await Employee.findAll({
+      where: {
+        role: "sma",
+        joined_by: req.params.refferalCode,
+      },
+    });
+    directSmaList.forEach((sma) => smaSet.add(JSON.stringify(sma)));
+
+    allSMAdata = Array.from(smaSet).map((sma) => JSON.parse(sma));
+
+    // Get JMAs for all SMAs if SMAs exist
+    if (allSMAdata.length > 0) {
+      for (const sma of allSMAdata) {
+        jmaList = await Employee.findAll({ where: { joined_by: sma.refferel_code, role: "jma" } });
+        allJMAdata = [...allJMAdata, ...jmaList];
+      }
+    } else {
+      // If no MMAs, try to get SMAs directly
+      const refferedJmaList = await Employee.findAll({
+        where: {
+          role: "jma",
+          joined_by: req.params.refferalCode,
+        },
+      });
+      allJMAdata = [...refferedJmaList];
+    }
+
+    // Get customers for all JMAs if JMAs exist
+    if (allJMAdata.length > 0) {
+      for (const jma of allJMAdata) {
+        const customerList = await Customer.findAll({
+          where: { joined_by: jma.refferel_code },
+        });
+        allCustomerData = [...allCustomerData, ...customerList];
+      }
+    }
+    return res.status(200).json({
+      data: {
+        mmaData: allMMAandAboveRolesData,
+        smaData: allSMAdata,
+        jmaData: allJMAdata,
+        customerData: allCustomerData,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = {
   allEmployeesData,
   allMonthlyRenewalsData,
@@ -298,4 +360,5 @@ module.exports = {
   getDashBoardDetails,
   getDayWiseCustomersCount,
   allRoleWiseEmployeesData,
+  getSmaJmaCustomerDetails,
 };
