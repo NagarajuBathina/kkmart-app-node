@@ -6,6 +6,7 @@ const connectTodb = require("./misc/db");
 const dotenv = require("dotenv");
 dotenv.config();
 
+//routes
 const employeeRoute = require("./routes/employee_route");
 const levelRoute = require("./routes/level_route");
 const customerRoute = require("./routes/cutsomer_route");
@@ -18,8 +19,8 @@ const app = express();
 
 const PORT = 1431;
 
+//middlewares
 app.use(express.json());
-
 app.use(
   cors({
     origin: "*",
@@ -46,6 +47,7 @@ app.get("/", async (req, res) => {
   }
 });
 
+//server running
 app.listen(PORT, () => {
   console.log(`server is running at port ${PORT}`);
 });

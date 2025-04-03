@@ -31,8 +31,8 @@ module.exports = (sequelize, dataTypes) => {
       status: {
         type: dataTypes.INTEGER,
         allowNull: false,
-      },
-      smart_card_number: {
+        },
+        smart_card_number: {
         type: dataTypes.STRING,
         allowNull: false,
         unique: true,
