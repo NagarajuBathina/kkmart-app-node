@@ -4,6 +4,7 @@ const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
 const path = require("path");
 const { error } = require("console");
+
 //create employee
 const createEmployee = async (req, res) => {
   const { sequelize } = await connectTodb();
@@ -382,7 +383,6 @@ const loginEmployee = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
     const { phone, password } = req.body;
-    console.log(req.body);
 
     const employee = await Employee.findOne({ where: { phone, password } });
     if (!employee) {
@@ -724,11 +724,13 @@ const updateEmployeeDetails = async (req, res) => {
     const { Employee } = await connectTodb();
     const { phone } = req.body;
 
+    console.log(req.body);
+
     if (!phone) {
       return res.status(400).json({ error: "Phone number is required" });
     }
 
-    // Update employee details
+    //Update employee details
     const [updated] = await Employee.update(req.body, { where: { phone } });
 
     if (updated === 0) {
@@ -762,6 +764,32 @@ const updateTodayEarnings = async (req, res) => {
   }
 };
 
+//forget password
+const forgotPassword = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { phone, password } = req.body;
+
+    console.log(req.body);
+
+    if (!phone) {
+      return res.status(400).json({ error: "Phone number is required" });
+    }
+
+    //Update employee details
+    const [updated] = await Employee.update({ password: password }, { where: { phone } });
+
+    if (updated === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    return res.status(200).json({ message: "Updated successfully" });
+  } catch (error) {
+    console.error("Error updating employee details:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createEmployee,
   checkUserDetailsBeforeCreating,
@@ -774,4 +802,5 @@ module.exports = {
   checkMMAalreadyExistsForPincode,
   updateEmployeeDetails,
   updateTodayEarnings,
+  forgotPassword,
 };
