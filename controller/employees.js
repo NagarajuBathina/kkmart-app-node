@@ -22,7 +22,7 @@ const createEmployee = async (req, res) => {
     console.log(req.body);
 
     // Fetch details of the referrer
-    joinedbyDetails = await fetchJoinedByDetails(joined_by, Employee, transaction);
+    joinedbyDetails = await fetchJoinedByDetails(joined_by, Employee);
 
     if (amount < 2950) {
       req.body.deductions = 2950 - amount;
@@ -102,7 +102,7 @@ const createEmployee = async (req, res) => {
       // level1 loop for Fetch updated referrer details
       if (joinedbyDetails.joined_by) {
         console.log("hello");
-        fetchDetailsOfLevel1Refferel = await fetchJoinedByDetails(joinedbyDetails.joined_by, Employee, transaction);
+        fetchDetailsOfLevel1Refferel = await fetchJoinedByDetails(joinedbyDetails.joined_by, Employee);
         console.log(fetchDetailsOfLevel1Refferel);
         const level1DirectMMACount = fetchDetailsOfLevel1Refferel.direct_mma_count || 0;
         const level1MMAcount = (fetchDetailsOfLevel1Refferel.mma_count || 0) + 1;
@@ -160,7 +160,7 @@ const createEmployee = async (req, res) => {
       // level2 loop for Fetch updated referrer details
       while (level2UniverselJoinedBy) {
         console.log("hello2");
-        fetchDetailsOfLevel2Refferel = await fetchJoinedByDetails(level2UniverselJoinedBy, Employee, transaction);
+        fetchDetailsOfLevel2Refferel = await fetchJoinedByDetails(level2UniverselJoinedBy, Employee);
 
         if (!fetchDetailsOfLevel2Refferel) {
           console.log("No more details found for level 2.");
@@ -229,7 +229,7 @@ const createEmployee = async (req, res) => {
         { jma_count: (joinedbyDetails.jma_count || 0) + 1 },
         { where: { refferel_code: joined_by }, transaction }
       );
-      mmaDetails = await fetchJoinedByDetails(joinedbyDetails.joined_by, Employee, transaction);
+      mmaDetails = await fetchJoinedByDetails(joinedbyDetails.joined_by, Employee);
       await Employee.update(
         { jma_count: (mmaDetails.jma_count || 0) + 1 },
         { where: { refferel_code: mmaDetails.refferel_code }, transaction }
@@ -274,14 +274,12 @@ const createEmployee = async (req, res) => {
   }
 };
 
-const fetchJoinedByDetails = async (joined_by, employee, transaction) => {
+const fetchJoinedByDetails = async (joined_by, employee) => {
   const checkJoindedBy = await employee.findOne({
     where: { refferel_code: joined_by },
-    transaction,
   });
 
   if (!checkJoindedBy) {
-    await transaction.rollback();
     return res.status(400).json({ error: "Invalid referral code" });
   }
 
