@@ -5,13 +5,14 @@ const monthlyRenewalModel = require("../models/renewal_model");
 const withdrawalModel = require("../models/withdrawal_model");
 const employeePaymentModel = require("../models/employees_payment_model");
 const employeeBankDetailsModel = require("../models/employee_bank_details_model");
-const sequelize = new Sequelize("u276789778_kk_mart", "u276789778_kk_mart", "kkmart@123@Apple", {
+
+const sequelize = new Sequelize("u276789778_kk_mart_new", "u276789778_kk_mart_new", "123@Newkkmart", {
   dialect: "mysql",
   host: "62.72.28.52",
   port: 3306,
   logging: false,
   pool: {
-    max: 3,
+    max: 5,
     min: 0,
     acquire: 30000,
     idle: 10000,
