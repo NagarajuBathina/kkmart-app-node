@@ -114,6 +114,7 @@ module.exports = (sequelize, dataTypes) => {
       },
       date: {
         type: dataTypes.DATE,
+        defaultValue: new Date(),
       },
       state: {
         type: dataTypes.STRING,

@@ -344,8 +344,6 @@ const checkMMAalreadyExistsForPincode = async (req, res) => {
     const { Employee } = await connectTodb();
     const { pincode, role, phone } = req.body;
 
-    console.log(req.body);
-
     if (role === "mma") {
       checkPincode = await Employee.findOne({ where: { pincode: pincode, role: "mma" } });
       if (checkPincode) {
@@ -357,7 +355,7 @@ const checkMMAalreadyExistsForPincode = async (req, res) => {
       }
     } else if (role === "sma" || role === "jma") {
       // Fetch the details of the referred user
-      const fetchedDetails = await Employee.findOne({ where: { phone } });
+      const fetchedDetails = await Employee.findOne({ where: { phone }, attributes: ["pincode"] });
       if (!fetchedDetails) {
         return res.status(400).json({ error: "Invalid referral code" });
       }
