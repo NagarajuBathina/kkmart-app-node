@@ -3,7 +3,6 @@ const puppeteer = require("puppeteer");
 const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
 const path = require("path");
-const { error } = require("console");
 
 //create employee
 const createEmployee = async (req, res) => {
@@ -13,6 +12,9 @@ const createEmployee = async (req, res) => {
   try {
     const { Employee, EmployeePayment } = await connectTodb();
     let { joined_by, role, amount, payment_status, transaction_id } = req.body;
+
+    req.body.date = new Date();
+
     let newEmployee,
       joinedbyDetails,
       fetchDetailsOfLevel1Refferel,
