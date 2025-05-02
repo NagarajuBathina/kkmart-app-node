@@ -515,6 +515,9 @@ const generateOfferLetter = async (req, res) => {
     }
 
     // Create the HTML content using the employee details
+    // <h5 style="color:rgb(128, 0, 0)">C/o. KISHAN AND KARMIK WELFARE MUTUALLY AIDED COOPERATIVE SOCIETY LIMITED.</h5>
+    //  <p>Mutually Aided</p>
+    //  <p>Cooperative Society Ltd.</p>
     const htmlContent = `
       <!DOCTYPE html>
 <html lang="en">
@@ -599,7 +602,7 @@ const generateOfferLetter = async (req, res) => {
       <div class="header">
       <img src="${imageSrc2}" width="200" height="100" />
        
-        <h5 style="color:rgb(128, 0, 0)">C/o. KISHAN AND KARMIK WELFARE MUTUALLY AIDED COOPERATIVE SOCIETY LIMITED.</h5>
+     
         <h5>GROUND FLOOR, BUILDING NO: 519/3, REVATHIPATHI STREET, TOLUSURUPALLE,</h5>
         <h5>TEKKALI, SRIKAKULAM DISTRICT, ANDHRA PRADESH - 532201</h5>
         <h5>REGD NO: 114 of 2024 | GSTN No: 37ABCFK8935H1ZZ</h5>
@@ -656,9 +659,8 @@ const generateOfferLetter = async (req, res) => {
           <p><strong>Signature of Associate</strong></p>
         </div>
         <div style=" text-align: right" class="signature-div">
-         <p>Kishan and Karmic Welfare</p>
-         <p>Mutually Aided</p>
-         <p>Cooperative Society Ltd.</p>
+         <p>KK Mart</p>
+        
          <img src="${imageSrc}" width="180" height="40" />
          <p>Managing Director</p>
         </div>
