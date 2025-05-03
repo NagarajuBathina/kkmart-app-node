@@ -628,7 +628,7 @@ const generateOfferLetter = async (req, res) => {
 
       <p>Dear ${name},</p>
       <p style='text-align: justify'>
-      &nbsp;&nbsp;&nbsp;&nbsp; We are please to inform you that based on our selection process you are provisionally selected for the post of <strong>${role}.</strong> for a probationary period of after successful and satisfactory completion of the probationary period and fulfilment of your target, the Job will be renewed for permanent position in the Society with the new terms and conditions. This offer is active with effect from the date of joining on the following terms and conditions.
+      &nbsp;&nbsp;&nbsp;&nbsp; We are pleased to inform you that based on our selection process, you are provisionally selected for the post of <strong>${role}.</strong> for a probationary period. After successful and satisfactory completion of the probationary period and fulfilment of your target, the Job will be renewed for permanent position in the Society with the new terms and conditions. This offer is active with effective from the date of joining and is subject to the following terms and conditions.
       </p>
 
       <div class="offer-details" >
@@ -642,17 +642,14 @@ const generateOfferLetter = async (req, res) => {
         </p>
         <p><strong>PLACE OF POSTING:</strong> ${placeOfPosting}</p>
         <p style='text-align: justify'>
-          <strong>TERMINATION OF ASSOCIATE:</strong> If you do not meet the Society’s expectations, there will be no
-          payment claim, and your job will be terminated if no improvement is observed during the 15-day period. The
-          processing fee of <strong>Rs. 2950</strong> is non-refundable.
+          <strong>TERMINATION OF ASSOCIATE:</strong> If If you do not meet the Society’s expectations, there will be no payment claim, and your job will be terminated if no improvement is observed during the 15-day period. The processing fee of *Rs. 2950* is non-refundable.
         </p>
       </div>
 
       <p style='text-align: justify'>
-        This offer letter is given to you according to our own terms and conditions, which may change in future if desired so by the society.
+      This offer letter is provided to you according to our own terms and conditions, which may change in the future if deemed necessary by the Society.
       </p>
-      <p style='text-align: justify'>This offer is being issued to you in two counterparts. You may acknowledge your acceptence of the terms and contained herein by signing one counterpart and returning it to us.</p>
-      <p>We look forword to your best performance.</p>
+      <p style='text-align: justify'>This offer is being issued to you in two counterparts. You may acknowledge your acceptance of the terms contained herein by signing one counterpart and returning it to us.</p>
 
       <div class="signature" style="display: flex; justify-content: space-between; align-items: flex-end;">
         <div style=" text-align: left">
