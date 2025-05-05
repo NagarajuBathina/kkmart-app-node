@@ -44,6 +44,10 @@ const createCustomer = async (req, res) => {
     // Process earnings distribution
     try {
       await processEarnings(joined_by, Employee, transaction);
+
+      // add each 5 rupees to below two accounts
+      await Employee.increment("earnings", { by: 5, where: { refferel_code: "kkmart999" }, transaction });
+      await Employee.increment("earnings", { by: 5, where: { refferel_code: "KKok&v" }, transaction });
     } catch (error) {
       await transaction.rollback();
       return res.status(400).json({ error: error.message });

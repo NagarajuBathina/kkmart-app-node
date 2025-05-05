@@ -4,8 +4,8 @@ const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
 const path = require("path");
 
-//create employee
-const createEmployee = async (req, res) => {
+//create employee by payment
+const createEmployeeByPayment = async (req, res) => {
   const { sequelize } = await connectTodb();
   const transaction = await sequelize.transaction();
 
@@ -787,8 +787,243 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+//create employee by using pin
+const createEmployeeByPIN = async (req, res) => {
+  const { sequelize } = await connectTodb();
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { Employee, Pins } = await connectTodb();
+    let { joined_by, role, pin } = req.body;
+
+    req.body.date = new Date();
+
+    let newEmployee,
+      joinedbyDetails,
+      fetchDetailsOfLevel1Refferel,
+      fetchDetailsOfLevel2Refferel,
+      level2UniverselJoinedBy;
+
+    // console.log(req.body);
+
+    const checkPin = await Pins.findOne({ where: { pin: pin } });
+
+    console.log(checkPin.dataValues);
+
+    if (checkPin && checkPin.status === 1) {
+      // Fetch details of the referrer
+      joinedbyDetails = await fetchJoinedByDetails(joined_by, Employee);
+
+      if (
+        role === "mma" ||
+        role === "zmh" ||
+        role === "dmh" ||
+        (role === "smh" && (joinedbyDetails.role !== "sma" || joinedbyDetails !== "jma"))
+      ) {
+        const directMMACount = (joinedbyDetails.direct_mma_count || 0) + 1;
+        const mmaCount = (joinedbyDetails.mma_count || 0) + 1;
+        req.body.position = directMMACount;
+
+        // Create new employee first
+        newEmployee = await Employee.create(req.body, { transaction });
+
+        // Update details for reffered by account
+        if (directMMACount === 5) {
+          await Employee.update(
+            {
+              role: "dmh",
+              //  mma_count: mmaCount,
+              mma_count: (joinedbyDetails.level1_mma_count || 0) + mmaCount,
+              level1_mma_count: 0,
+              direct_mma_count: directMMACount,
+            },
+            { where: { refferel_code: joined_by }, transaction }
+          );
+        } else if (mmaCount === 30 && directMMACount >= 5) {
+          await Employee.update(
+            {
+              role: "zmh",
+              //  mma_count: mmaCount,
+              mma_count: (joinedbyDetails.level2_mma_count || 0) + mmaCount,
+              level2_mma_count: 0,
+              direct_mma_count: directMMACount,
+            },
+            { where: { refferel_code: joined_by }, transaction }
+          );
+        } else if (mmaCount >= 105) {
+          await Employee.update(
+            {
+              role: "smh",
+              // mma_count: mmaCount,
+              mma_count: (joinedbyDetails.level2_mma_count || 0) + mmaCount,
+              level2_mma_count: 0,
+              direct_mma_count: directMMACount,
+            },
+            { where: { refferel_code: joined_by }, transaction }
+          );
+        } else if (mmaCount < 30 && directMMACount >= 5) {
+          await Employee.update(
+            {
+              mma_count: mmaCount,
+              // level2_mma_count: (joinedbyDetails.level2_mma_count || 0) + 1,
+              direct_mma_count: directMMACount,
+            },
+            { where: { refferel_code: joined_by }, transaction }
+          );
+        } else {
+          await Employee.update(
+            { mma_count: mmaCount, direct_mma_count: directMMACount },
+            { where: { refferel_code: joined_by }, transaction }
+          );
+        }
+
+        // level1 loop for Fetch updated referrer details
+        if (joinedbyDetails.joined_by) {
+          fetchDetailsOfLevel1Refferel = await fetchJoinedByDetails(joinedbyDetails.joined_by, Employee);
+          const level1DirectMMACount = fetchDetailsOfLevel1Refferel.direct_mma_count || 0;
+          const level1MMAcount = (fetchDetailsOfLevel1Refferel.mma_count || 0) + 1;
+          level2UniverselJoinedBy = fetchDetailsOfLevel1Refferel.joined_by;
+
+          if (level1DirectMMACount < 5) {
+            await Employee.update(
+              {
+                level1_mma_count: (fetchDetailsOfLevel1Refferel.level1_mma_count || 0) + 1,
+              },
+              { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
+            );
+          } else if (level1MMAcount === 30 && level1DirectMMACount >= 5) {
+            await Employee.update(
+              {
+                role: "zmh",
+                mma_count: level1MMAcount + (fetchDetailsOfLevel1Refferel.level2_mma_count || 0),
+                level2_mma_count: 0,
+              },
+              { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
+            );
+          } else if (level1MMAcount >= 105) {
+            await Employee.update(
+              { mma_count: level1MMAcount, role: "smh" },
+              { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
+            );
+          } else {
+            await Employee.update(
+              { mma_count: level1MMAcount },
+              { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
+            );
+          }
+        }
+
+        // level2 loop for Fetch updated referrer details
+        while (level2UniverselJoinedBy) {
+          fetchDetailsOfLevel2Refferel = await fetchJoinedByDetails(level2UniverselJoinedBy, Employee);
+
+          if (!fetchDetailsOfLevel2Refferel) {
+            console.log("No more details found for level 2.");
+            break;
+          }
+          console.log(fetchDetailsOfLevel2Refferel);
+
+          const level2DirectMMACount = fetchDetailsOfLevel2Refferel.direct_mma_count || 0;
+          const level2MMAcount = (fetchDetailsOfLevel2Refferel.mma_count || 0) + 1;
+
+          if (level2DirectMMACount < 5) {
+            await Employee.update(
+              {
+                level2_mma_count: (fetchDetailsOfLevel2Refferel.level2_mma_count || 0) + 1,
+              },
+              { where: { refferel_code: level2UniverselJoinedBy }, transaction }
+            );
+          } else if (level2MMAcount === 31 && level2DirectMMACount >= 5) {
+            await Employee.update(
+              {
+                role: "zmh",
+                mma_count: level2MMAcount + (fetchDetailsOfLevel2Refferel.level2_mma_count || 0),
+                level2_mma_count: 0,
+              },
+              { where: { refferel_code: level2UniverselJoinedBy }, transaction }
+            );
+          } else if (level2MMAcount >= 106) {
+            await Employee.update(
+              { mma_count: level2MMAcount, role: "smh" },
+              { where: { refferel_code: level2UniverselJoinedBy }, transaction }
+            );
+          } else if (level2MMAcount < 31 && level2DirectMMACount >= 5) {
+            await Employee.update(
+              {
+                level2_mma_count: (fetchDetailsOfLevel2Refferel.level2_mma_count || 0) + 1,
+              },
+              { where: { refferel_code: level2UniverselJoinedBy }, transaction }
+            );
+          } else {
+            await Employee.update(
+              { mma_count: level2MMAcount },
+              { where: { refferel_code: level2UniverselJoinedBy }, transaction }
+            );
+          }
+          level2UniverselJoinedBy = fetchDetailsOfLevel2Refferel.joined_by;
+
+          if (!level2UniverselJoinedBy) {
+            console.log("No more level 2 referrals.");
+            break;
+          }
+        }
+      } else if (role === "jma" && joinedbyDetails.role === "sma") {
+        req.body.position = 1 + (joinedbyDetails.jma_count || 0);
+        newEmployee = await Employee.create(req.body, { transaction });
+        await Employee.update(
+          { jma_count: (joinedbyDetails.jma_count || 0) + 1 },
+          { where: { refferel_code: joined_by }, transaction }
+        );
+        mmaDetails = await fetchJoinedByDetails(joinedbyDetails.joined_by, Employee);
+        await Employee.update(
+          { jma_count: (mmaDetails.jma_count || 0) + 1 },
+          { where: { refferel_code: mmaDetails.refferel_code }, transaction }
+        );
+      } else if (role === "sma" && joinedbyDetails.role !== "jma") {
+        req.body.position = 1 + (joinedbyDetails.sma_count || 0);
+        newEmployee = await Employee.create(req.body, { transaction });
+        await Employee.update(
+          { sma_count: (joinedbyDetails.sma_count || 0) + 1 },
+          { where: { refferel_code: joined_by }, transaction }
+        );
+      } else {
+        await transaction.rollback();
+        return res.status(400).json({ error: "Invalid role hierarchy" });
+      }
+
+      if (newEmployee) {
+        await Pins.update(
+          {
+            used_by_name: newEmployee.name,
+            used_on: req.body.date,
+            used_by_id: newEmployee.refferel_code,
+            used_by_phone: newEmployee.phone,
+            status: 0,
+          },
+          { where: { pin: pin }, transaction }
+        );
+      }
+
+      await transaction.commit();
+      return res.status(201).json({
+        success: true,
+        message: "Employee created successfully",
+        employee: newEmployee,
+      });
+    } else if (checkPin && checkPin.status === 0) {
+      return res.status(400).json({ message: "Pin already used" });
+    } else {
+      return res.status(404).json({ message: "Invalid pin" });
+    }
+  } catch (e) {
+    await transaction.rollback();
+    console.error(e);
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = {
-  createEmployee,
+  createEmployeeByPayment,
   checkUserDetailsBeforeCreating,
   loginEmployee,
   getEmployeeDetails,
@@ -800,4 +1035,5 @@ module.exports = {
   updateEmployeeDetails,
   updateTodayEarnings,
   forgotPassword,
+  createEmployeeByPIN,
 };

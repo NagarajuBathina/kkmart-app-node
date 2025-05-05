@@ -5,6 +5,7 @@ const monthlyRenewalModel = require("../models/renewal_model");
 const withdrawalModel = require("../models/withdrawal_model");
 const employeePaymentModel = require("../models/employees_payment_model");
 const employeeBankDetailsModel = require("../models/employee_bank_details_model");
+const pinsModel = require("../models/pins_model");
 
 const sequelize = new Sequelize("u276789778_kk_mart_new", "u276789778_kk_mart_new", "123@Newkkmart", {
   dialect: "mysql",
@@ -25,8 +26,9 @@ const Renewal = monthlyRenewalModel(sequelize, Sequelize);
 const Withdrawal = withdrawalModel(sequelize, Sequelize);
 const EmployeePayment = employeePaymentModel(sequelize, Sequelize);
 const EmployeeBankDetails = employeeBankDetailsModel(sequelize, Sequelize);
+const Pins = pinsModel(sequelize, Sequelize);
 
-const Models = { Employee, Customer, Renewal, Withdrawal, EmployeePayment, EmployeeBankDetails };
+const Models = { Employee, Customer, Renewal, Withdrawal, EmployeePayment, EmployeeBankDetails, Pins };
 const connection = {};
 
 module.exports = async () => {

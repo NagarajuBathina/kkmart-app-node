@@ -3,7 +3,8 @@ const controller = require("../controller/employees");
 const upload = require("../middleware/file_upload");
 const router = express.Router();
 
-router.post("/create_employee", controller.createEmployee);
+router.post("/create_employee", controller.createEmployeeByPayment);
+router.post("/create_employee_by_pin", controller.createEmployeeByPIN);
 router.post("/login", controller.loginEmployee);
 router.post("/employee_details", controller.getEmployeeDetails);
 router.post("/change_password", controller.changePassword);

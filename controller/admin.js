@@ -348,6 +348,41 @@ const getSmaJmaCustomerDetails = async (req, res) => {
   }
 };
 
+//generate random pins
+const generateRandomPins = async (req, res) => {
+  const { Pins } = await connectTodb();
+  try {
+    const generatedPins = new Set();
+
+    // Generate 1000 unique random pins
+    while (generatedPins.size < 1000) {
+      const randomCharacters = Math.random().toString(36).slice(-4); // Generate 4 random alphanumeric characters
+      const specialCharacters = "@#$%&";
+      const randomSpecialChar = specialCharacters[Math.floor(Math.random() * specialCharacters.length)];
+      const randomPin = `kkmart${randomCharacters}${randomSpecialChar}`; // Combine "kkmart", random characters, and a special character
+      generatedPins.add(randomPin);
+    }
+
+    // Convert the set to an array and prepare data for bulk insertion
+    const pinsArray = Array.from(generatedPins).map((pin) => ({
+      pin,
+      status: 1,
+    }));
+
+    // Save the pins to the database
+    await Pins.bulkCreate(pinsArray);
+
+    return res.status(201).json({
+      success: true,
+      message: "1000 random unique pins generated successfully",
+      data: pinsArray,
+    });
+  } catch (e) {
+    console.error("Error generating random pins:", e);
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = {
   allEmployeesData,
   allMonthlyRenewalsData,
@@ -361,4 +396,5 @@ module.exports = {
   getDayWiseCustomersCount,
   allRoleWiseEmployeesData,
   getSmaJmaCustomerDetails,
+  generateRandomPins,
 };
