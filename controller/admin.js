@@ -30,7 +30,7 @@ const allRoleWiseEmployeesData = async (req, res) => {
     const allData = await Employee.findAll({
       where: { role: req.params.role },
       order: [["addedon", "DESC"]],
-      attributes: ["slno", "name", "father_name", "phone", "status", "role"],
+      attributes: ["slno", "name", "father_name", "phone", "status", "role", "pincode"],
     });
 
     if (!allData || allData.length === 0) {
