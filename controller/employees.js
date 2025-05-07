@@ -991,6 +991,8 @@ const createEmployeeByPIN = async (req, res) => {
         return res.status(400).json({ error: "Invalid role hierarchy" });
       }
 
+      console.log("phone:-", newEmployee.phone);
+
       if (newEmployee) {
         await Pins.update(
           {
