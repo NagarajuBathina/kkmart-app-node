@@ -826,7 +826,7 @@ const createEmployeeByPIN = async (req, res) => {
         req.body.position = directMMACount;
 
         // Create new employee first
-        newEmployee = await Employee.create(deductions, ...req.body, { transaction });
+        newEmployee = await Employee.create(req.body, { transaction });
 
         // Update details for reffered by account
         if (directMMACount === 5) {
@@ -970,7 +970,7 @@ const createEmployeeByPIN = async (req, res) => {
         }
       } else if (role === "jma" && joinedbyDetails.role === "sma") {
         req.body.position = 1 + (joinedbyDetails.jma_count || 0);
-        newEmployee = await Employee.create(deductions, ...req.body, { transaction });
+        newEmployee = await Employee.create(req.body, { transaction });
         await Employee.update(
           { jma_count: (joinedbyDetails.jma_count || 0) + 1 },
           { where: { refferel_code: joined_by }, transaction }
@@ -982,7 +982,7 @@ const createEmployeeByPIN = async (req, res) => {
         );
       } else if (role === "sma" && joinedbyDetails.role !== "jma") {
         req.body.position = 1 + (joinedbyDetails.sma_count || 0);
-        newEmployee = await Employee.create(deductions, ...req.body, { transaction });
+        newEmployee = await Employee.create(req.body, { transaction });
         await Employee.update(
           { sma_count: (joinedbyDetails.sma_count || 0) + 1 },
           { where: { refferel_code: joined_by }, transaction }
