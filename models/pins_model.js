@@ -20,7 +20,8 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.STRING,
       },
       used_by_phone: {
-        type: dataTypes.INTEGER,
+        type: dataTypes.STRING,
+        allowNull: false,
         unique: true,
       },
       used_on: {
