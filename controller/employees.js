@@ -797,6 +797,7 @@ const createEmployeeByPIN = async (req, res) => {
     let { joined_by, role, pin } = req.body;
 
     req.body.date = new Date();
+    req.body.deductions = 2950.0;
 
     let newEmployee,
       joinedbyDetails,
@@ -809,11 +810,10 @@ const createEmployeeByPIN = async (req, res) => {
     const checkPin = await Pins.findOne({ where: { pin: pin } });
 
     console.log(checkPin.dataValues);
-    
+
     if (checkPin && checkPin.status === 1) {
       // Fetch details of the referrer
       joinedbyDetails = await fetchJoinedByDetails(joined_by, Employee);
-      const deductions = 2590.00;
 
       if (
         role === "mma" ||
