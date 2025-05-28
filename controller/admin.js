@@ -6,7 +6,7 @@ const allEmployeesData = async (req, res) => {
     const { Employee } = await connectTodb();
     const allData = await Employee.findAll({
       order: [["addedon", "DESC"]],
-      attributes: ["slno", "name", "father_name", "phone", "status", "role"],
+      attributes: ["slno", "name", "father_name", "phone", "status", "role", "pincode", "district", "state"],
     });
 
     if (!allData || allData.length === 0) {
@@ -30,7 +30,7 @@ const allRoleWiseEmployeesData = async (req, res) => {
     const allData = await Employee.findAll({
       where: { role: req.params.role },
       order: [["addedon", "DESC"]],
-      attributes: ["slno", "name", "father_name", "phone", "status", "role", "pincode"],
+      attributes: ["slno", "name", "father_name", "phone", "status", "role", "pincode", "district", "state"],
     });
 
     if (!allData || allData.length === 0) {
