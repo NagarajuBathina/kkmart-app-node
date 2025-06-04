@@ -13,9 +13,11 @@ router.post("/validate_userdetails_before_account_creation", controller.checkUse
 router.get("/generate_offer_letter/:phone", controller.generateOfferLetter);
 router.post("/check_phone_already_exists", controller.checkPhoneAlreadyExists);
 router.post("/check_mma_pincode_already_exists", controller.checkMMAalreadyExistsForPincode);
-router.post("/update_employee_details", controller.updateEmployeeDetails);
+router.put("/update_employee_details", controller.updateEmployeeDetails);
 router.post("/update_today_earinings", controller.updateTodayEarnings);
 router.put("/forgot_password", controller.forgotPassword);
+router.post("/fetch_mandals_by_district", controller.fetchMandalsByDistrict);
+
 module.exports = router;
 
 // {

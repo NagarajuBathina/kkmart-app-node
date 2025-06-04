@@ -38,10 +38,14 @@ const createEmployeeByPayment = async (req, res) => {
     ) {
       const directMMACount = (joinedbyDetails.direct_mma_count || 0) + 1;
       const mmaCount = (joinedbyDetails.mma_count || 0) + 1;
+      const totalMMACount = mmaCount + (joinedbyDetails.level2_mma_count || 0);
+
       req.body.position = directMMACount;
 
       console.log(directMMACount);
       console.log(mmaCount);
+
+      console.log(totalMMACount);
 
       // Create new employee first
       newEmployee = await Employee.create(req.body, { transaction });
@@ -52,7 +56,6 @@ const createEmployeeByPayment = async (req, res) => {
         await Employee.update(
           {
             role: "dmh",
-            //  mma_count: mmaCount,
             mma_count: (joinedbyDetails.level1_mma_count || 0) + mmaCount,
             level1_mma_count: 0,
             direct_mma_count: directMMACount,
@@ -64,20 +67,18 @@ const createEmployeeByPayment = async (req, res) => {
         await Employee.update(
           {
             role: "zmh",
-            //  mma_count: mmaCount,
             mma_count: (joinedbyDetails.level2_mma_count || 0) + mmaCount,
             level2_mma_count: 0,
             direct_mma_count: directMMACount,
           },
           { where: { refferel_code: joined_by }, transaction }
         );
-      } else if (mmaCount >= 105) {
+      } else if (totalMMACount >= 105) {
         console.log("!!!! 3");
         await Employee.update(
           {
             role: "smh",
-            // mma_count: mmaCount,
-            mma_count: (joinedbyDetails.level2_mma_count || 0) + mmaCount,
+            mma_count: totalMMACount,
             level2_mma_count: 0,
             direct_mma_count: directMMACount,
           },
@@ -88,7 +89,6 @@ const createEmployeeByPayment = async (req, res) => {
         await Employee.update(
           {
             mma_count: mmaCount,
-            // level2_mma_count: (joinedbyDetails.level2_mma_count || 0) + 1,
             direct_mma_count: directMMACount,
           },
           { where: { refferel_code: joined_by }, transaction }
@@ -108,17 +108,19 @@ const createEmployeeByPayment = async (req, res) => {
         console.log(fetchDetailsOfLevel1Refferel);
         const level1DirectMMACount = fetchDetailsOfLevel1Refferel.direct_mma_count || 0;
         const level1MMAcount = (fetchDetailsOfLevel1Refferel.mma_count || 0) + 1;
+        const level1TotalMMACount = level1MMAcount + (fetchDetailsOfLevel1Refferel.level2_mma_count || 0);
+
         level2UniverselJoinedBy = fetchDetailsOfLevel1Refferel.joined_by;
 
         console.log("level1 ", level1DirectMMACount);
         console.log("level1 ", level1MMAcount);
+        console.log("level1", level1TotalMMACount);
 
         if (level1DirectMMACount < 5) {
           console.log("level1");
           await Employee.update(
             {
               level1_mma_count: (fetchDetailsOfLevel1Refferel.level1_mma_count || 0) + 1,
-              // mma_count: level1MMAcount
             },
             { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
           );
@@ -127,30 +129,18 @@ const createEmployeeByPayment = async (req, res) => {
           await Employee.update(
             {
               role: "zmh",
-              // mma_count: level1MMAcount,
               mma_count: level1MMAcount + (fetchDetailsOfLevel1Refferel.level2_mma_count || 0),
               level2_mma_count: 0,
             },
             { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
           );
-        } else if (level1MMAcount >= 105) {
+        } else if (level1TotalMMACount >= 105) {
           console.log("level3");
           await Employee.update(
-            { mma_count: level1MMAcount, role: "smh" },
+            { mma_count: level1MMAcount, role: "smh", level2_mma_count: 0 },
             { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
           );
-        }
-        // else if (level1MMAcount < 30 && level1DirectMMACount >= 5) {
-        //   console.log("level4");
-        //   await Employee.update(
-        //     {
-        //       mma_count: level1MMAcount,
-        //       // level2_mma_count: (fetchDetailsOfLevel1Refferel.level2_mma_count || 0) + 1,
-        //     },
-        //     { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
-        //   );
-        // }
-        else {
+        } else {
           console.log("level6");
           await Employee.update(
             { mma_count: level1MMAcount },
@@ -160,27 +150,25 @@ const createEmployeeByPayment = async (req, res) => {
       }
 
       // level2 loop for Fetch updated referrer details
-      while (level2UniverselJoinedBy) {
+      if (level2UniverselJoinedBy) {
         console.log("hello2");
         fetchDetailsOfLevel2Refferel = await fetchJoinedByDetails(level2UniverselJoinedBy, Employee);
 
-        if (!fetchDetailsOfLevel2Refferel) {
-          console.log("No more details found for level 2.");
-          break;
-        }
         console.log(fetchDetailsOfLevel2Refferel);
 
         const level2DirectMMACount = fetchDetailsOfLevel2Refferel.direct_mma_count || 0;
         const level2MMAcount = (fetchDetailsOfLevel2Refferel.mma_count || 0) + 1;
+        const level2TotalMMACount = level2MMAcount + (fetchDetailsOfLevel2Refferel.level2_mma_count || 0);
+
         console.log("level2 ", level2DirectMMACount);
         console.log("level2 ", level2MMAcount);
+        console.log("level2", level2TotalMMACount);
 
         if (level2DirectMMACount < 5) {
           console.log("level7");
           await Employee.update(
             {
               level2_mma_count: (fetchDetailsOfLevel2Refferel.level2_mma_count || 0) + 1,
-              //  mma_count: level2MMAcount
             },
             { where: { refferel_code: level2UniverselJoinedBy }, transaction }
           );
@@ -189,23 +177,21 @@ const createEmployeeByPayment = async (req, res) => {
           await Employee.update(
             {
               role: "zmh",
-              // mma_count: level2MMAcount,
               mma_count: level2MMAcount + (fetchDetailsOfLevel2Refferel.level2_mma_count || 0),
               level2_mma_count: 0,
             },
             { where: { refferel_code: level2UniverselJoinedBy }, transaction }
           );
-        } else if (level2MMAcount >= 106) {
+        } else if (level2TotalMMACount >= 105) {
           console.log("level9");
           await Employee.update(
-            { mma_count: level2MMAcount, role: "smh" },
+            { mma_count: level2MMAcount, role: "smh", level2_mma_count: 0 },
             { where: { refferel_code: level2UniverselJoinedBy }, transaction }
           );
         } else if (level2MMAcount < 31 && level2DirectMMACount >= 5) {
           console.log("level10");
           await Employee.update(
             {
-              // mma_count: level2MMAcount,
               level2_mma_count: (fetchDetailsOfLevel2Refferel.level2_mma_count || 0) + 1,
             },
             { where: { refferel_code: level2UniverselJoinedBy }, transaction }
@@ -217,12 +203,8 @@ const createEmployeeByPayment = async (req, res) => {
             { where: { refferel_code: level2UniverselJoinedBy }, transaction }
           );
         }
-        level2UniverselJoinedBy = fetchDetailsOfLevel2Refferel.joined_by;
-
-        if (!level2UniverselJoinedBy) {
-          console.log("No more level 2 referrals.");
-          break;
-        }
+      } else {
+        console.log("level 2 user not exist.");
       }
     } else if (role === "jma" && joinedbyDetails.role === "sma") {
       req.body.position = 1 + (joinedbyDetails.jma_count || 0);
@@ -721,17 +703,15 @@ const updateEmployeeDetails = async (req, res) => {
     const { Employee } = await connectTodb();
     const { phone } = req.body;
 
-    console.log(req.body);
-
     if (!phone) {
       return res.status(400).json({ error: "Phone number is required" });
     }
 
     //Update employee details
-    const [updated] = await Employee.update(req.body, { where: { phone } });
+    const [updated] = await Employee.update(req.body, { where: { phone: phone } });
 
     if (updated === 0) {
-      return res.status(404).json({ error: "Employee not found" });
+      return res.status(404).json({ error: "No changes found" });
     }
 
     return res.status(200).json({ message: "Updated successfully" });
@@ -823,6 +803,7 @@ const createEmployeeByPIN = async (req, res) => {
       ) {
         const directMMACount = (joinedbyDetails.direct_mma_count || 0) + 1;
         const mmaCount = (joinedbyDetails.mma_count || 0) + 1;
+        const totalMMACount = mmaCount + (joinedbyDetails.level2_mma_count || 0);
         req.body.position = directMMACount;
 
         // Create new employee first
@@ -851,12 +832,12 @@ const createEmployeeByPIN = async (req, res) => {
             },
             { where: { refferel_code: joined_by }, transaction }
           );
-        } else if (mmaCount >= 105) {
+        } else if (totalMMACount >= 105) {
           await Employee.update(
             {
               role: "smh",
               // mma_count: mmaCount,
-              mma_count: (joinedbyDetails.level2_mma_count || 0) + mmaCount,
+              mma_count: totalMMACount,
               level2_mma_count: 0,
               direct_mma_count: directMMACount,
             },
@@ -884,6 +865,7 @@ const createEmployeeByPIN = async (req, res) => {
           const level1DirectMMACount = fetchDetailsOfLevel1Refferel.direct_mma_count || 0;
           const level1MMAcount = (fetchDetailsOfLevel1Refferel.mma_count || 0) + 1;
           level2UniverselJoinedBy = fetchDetailsOfLevel1Refferel.joined_by;
+          const level1TotalMMACount = level1MMAcount + (fetchDetailsOfLevel1Refferel.level2_mma_count || 0);
 
           if (level1DirectMMACount < 5) {
             await Employee.update(
@@ -901,9 +883,9 @@ const createEmployeeByPIN = async (req, res) => {
               },
               { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
             );
-          } else if (level1MMAcount >= 105) {
+          } else if (level1TotalMMACount >= 105) {
             await Employee.update(
-              { mma_count: level1MMAcount, role: "smh" },
+              { mma_count: level1MMAcount, role: "smh", level2_mma_count: 0 },
               { where: { refferel_code: joinedbyDetails.joined_by }, transaction }
             );
           } else {
@@ -915,17 +897,14 @@ const createEmployeeByPIN = async (req, res) => {
         }
 
         // level2 loop for Fetch updated referrer details
-        while (level2UniverselJoinedBy) {
+        if (level2UniverselJoinedBy) {
           fetchDetailsOfLevel2Refferel = await fetchJoinedByDetails(level2UniverselJoinedBy, Employee);
 
-          if (!fetchDetailsOfLevel2Refferel) {
-            console.log("No more details found for level 2.");
-            break;
-          }
           console.log(fetchDetailsOfLevel2Refferel);
 
           const level2DirectMMACount = fetchDetailsOfLevel2Refferel.direct_mma_count || 0;
           const level2MMAcount = (fetchDetailsOfLevel2Refferel.mma_count || 0) + 1;
+          const level2TotalMMACount = level2MMAcount + (fetchDetailsOfLevel2Refferel.level2_mma_count || 0);
 
           if (level2DirectMMACount < 5) {
             await Employee.update(
@@ -943,9 +922,9 @@ const createEmployeeByPIN = async (req, res) => {
               },
               { where: { refferel_code: level2UniverselJoinedBy }, transaction }
             );
-          } else if (level2MMAcount >= 106) {
+          } else if (level2TotalMMACount >= 105) {
             await Employee.update(
-              { mma_count: level2MMAcount, role: "smh" },
+              { mma_count: level2MMAcount, role: "smh", level2_mma_count: 0 },
               { where: { refferel_code: level2UniverselJoinedBy }, transaction }
             );
           } else if (level2MMAcount < 31 && level2DirectMMACount >= 5) {
@@ -961,12 +940,8 @@ const createEmployeeByPIN = async (req, res) => {
               { where: { refferel_code: level2UniverselJoinedBy }, transaction }
             );
           }
-          level2UniverselJoinedBy = fetchDetailsOfLevel2Refferel.joined_by;
-
-          if (!level2UniverselJoinedBy) {
-            console.log("No more level 2 referrals.");
-            break;
-          }
+        } else {
+          console.log("level 2 user not exist.");
         }
       } else if (role === "jma" && joinedbyDetails.role === "sma") {
         req.body.position = 1 + (joinedbyDetails.jma_count || 0);
@@ -1025,6 +1000,17 @@ const createEmployeeByPIN = async (req, res) => {
   }
 };
 
+const fetchMandalsByDistrict = async (req, res) => {
+  const { Mandals } = await connectTodb();
+  const { district } = req.body;
+  try {
+    const mandalsList = await Mandals.findAll({ where: { district: district }, attributes: ["mandal"] });
+    return res.status(200).json({ data: mandalsList, success: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = {
   createEmployeeByPayment,
   checkUserDetailsBeforeCreating,
@@ -1039,4 +1025,5 @@ module.exports = {
   updateTodayEarnings,
   forgotPassword,
   createEmployeeByPIN,
+  fetchMandalsByDistrict,
 };
