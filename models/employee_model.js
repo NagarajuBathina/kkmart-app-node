@@ -127,7 +127,7 @@ module.exports = (sequelize, dataTypes) => {
       },
       mandal: {
         type: dataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       gender: {
         type: dataTypes.STRING,
