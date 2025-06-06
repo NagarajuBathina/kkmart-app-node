@@ -14,7 +14,7 @@ const sequelize = new Sequelize("u276789778_kk_mart_new", "u276789778_kk_mart_ne
   port: 3306,
   logging: false,
   pool: {
-    max: 5,
+    max: 10,
     min: 0,
     acquire: 30000,
     idle: 10000,

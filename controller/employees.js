@@ -789,7 +789,7 @@ const createEmployeeByPIN = async (req, res) => {
 
     const checkPin = await Pins.findOne({ where: { pin: pin } });
 
-    console.log(checkPin.dataValues);
+    // console.log(checkPin.dataValues);
 
     if (checkPin && checkPin.status === 1) {
       // Fetch details of the referrer
