@@ -6,7 +6,7 @@ const connectTodb = require("../misc/db");
 const validateBeforeCreatingCustomer = async (req, res) => {
   try {
     const { Customer } = await connectTodb();
-    const { phone, adhaar, smart_card_number } = req.body;
+    const { phone, adhaar } = req.body;
     const exitstingPhone = await Customer.findOne({ where: { phone } });
     if (exitstingPhone) {
       return res.status(400).json({ error: "Phone number already exists" });
@@ -17,10 +17,6 @@ const validateBeforeCreatingCustomer = async (req, res) => {
       return res.status(400).json({ error: "Adhaar number already exists" });
     }
 
-    const exitstingSmartCard = await Customer.findOne({ where: { smart_card_number } });
-    if (exitstingSmartCard) {
-      return res.status(400).json({ error: "Smart card already exists" });
-    }
     return res.status(200).json({ success: true });
   } catch (e) {
     console.log(e);
@@ -30,34 +26,55 @@ const validateBeforeCreatingCustomer = async (req, res) => {
 
 // create customer
 const createCustomer = async (req, res) => {
-  const { sequelize, Customer, Renewal, Employee } = await connectTodb();
+  const { sequelize, Customer, Renewal, Employee, CustomerPins } = await connectTodb();
   const transaction = await sequelize.transaction();
   try {
-    let { joined_by } = req.body;
+    let { joined_by, joined_by_name, pin } = req.body;
 
-    // Create customer
-    await Customer.create(req.body, { transaction });
+    const checkPin = await CustomerPins.findOne({ where: { pin: pin } });
 
-    // Create renewal record
-    await Renewal.create(req.body, { transaction });
+    if (checkPin && checkPin.status === 1) {
+      const newCustomer = await Customer.create(req.body, { transaction });
 
-    // Process earnings distribution
-    try {
+      // Create renewal record
+      // await Renewal.create(req.body, { transaction });
+
+      // Process earnings distribution
       await processEarnings(joined_by, Employee, transaction);
-
       // add each 5 rupees to below two accounts
       await Employee.increment("earnings", { by: 5, where: { refferel_code: "kkmart999" }, transaction });
       await Employee.increment("earnings", { by: 5, where: { refferel_code: "KKok&v" }, transaction });
-    } catch (error) {
-      await transaction.rollback();
-      return res.status(400).json({ error: error.message });
-    }
 
-    await transaction.commit();
-    return res.status(201).json({
-      success: true,
-      message: "Customer created successfully",
-    });
+      try {
+        if (newCustomer) {
+          await CustomerPins.update(
+            {
+              used_on: newCustomer.addedon,
+              created_by_name: joined_by_name,
+              created_by: newCustomer.joined_by,
+              customer_phone: newCustomer.phone,
+              customer_name: newCustomer.name,
+              status: 0,
+            },
+            { where: { pin: pin }, transaction }
+          );
+        }
+
+        await transaction.commit();
+        return res.status(201).json({
+          success: true,
+          message: "Customer created successfully",
+        });
+      } catch (error) {
+        await transaction.rollback();
+        return res.status(400).json({ error: error.message });
+      }
+    }
+    if (checkPin && checkPin.status === 0) {
+      return res.status(400).json({ message: "Pin Already Used" });
+    } else {
+      return res.status(404).json({ message: "Invalid pin" });
+    }
   } catch (e) {
     if (transaction && !transaction.finished) {
       await transaction.rollback();
@@ -89,8 +106,6 @@ const processEarnings = async (joined_by, employee, transaction) => {
   }
   let mmaJoinedBy = joinedBySMAdata.joined_by;
   let loopCount = 0;
-
-  console.log(mmaJoinedBy);
 
   while (mmaJoinedBy) {
     const joinedByMMAdata = await fetchJoinedByData(mmaJoinedBy, employee);
@@ -351,6 +366,46 @@ const getCustomerPaymentHistory = async (req, res) => {
   }
 };
 
+// generate customer unique pins
+const generatePins = async (req, res) => {
+  const { CustomerPins } = await connectTodb();
+  try {
+    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    const pinsSet = new Set();
+
+    // Helper to generate a random 5-character code
+    function randomCode() {
+      let code = "";
+      for (let i = 0; i < 5; i++) {
+        code += charset.charAt(Math.floor(Math.random() * charset.length));
+      }
+      return code;
+    }
+
+    // Generate 1000 unique pins
+    while (pinsSet.size < 1000) {
+      const pin = "KKmart" + randomCode();
+      pinsSet.add(pin);
+    }
+
+    // Prepare for bulk insert
+    const pinsArray = Array.from(pinsSet).map((pin) => ({
+      pin,
+      status: 1,
+    }));
+
+    await CustomerPins.bulkCreate(pinsArray);
+
+    return res.status(201).json({
+      success: true,
+      message: "1000 unique pins generated successfully",
+      data: pinsArray,
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = {
   createCustomer,
   getCustomerDetails,
@@ -359,4 +414,5 @@ module.exports = {
   getRenewalHistory,
   uploadProfileforCustomer,
   getCustomerPaymentHistory,
+  generatePins,
 };

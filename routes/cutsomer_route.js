@@ -10,5 +10,6 @@ router.post("/validate_before_creating_customer", controller.validateBeforeCreat
 router.get("/get_renewal_data_by_id/:joined_by", controller.getRenewalHistory);
 router.get("/get_customer_payment_data_by_id/:joined_by", controller.getCustomerPaymentHistory);
 router.post("/update_profile_for_customer", upload.single("profile"), controller.uploadProfileforCustomer);
+router.post("/generate_customer_pins", controller.generatePins);
 
 module.exports = router;

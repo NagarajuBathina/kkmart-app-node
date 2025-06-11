@@ -473,7 +473,7 @@ const generateOfferLetter = async (req, res) => {
     const placeOfPosting = employeeDetails.place_of_posting.toUpperCase();
     const role = employeeDetails.role.split("").join(".").toUpperCase();
 
-    const imagePath = path.join(__dirname, "../assets/sign.png");
+    const imagePath = path.join(__dirname, "../assets/sign & signature kk.png");
     const imageBase64 = await fs.readFile(imagePath, { encoding: "base64" });
     const imageSrc = `data:image/png;base64,${imageBase64}`;
 
@@ -640,7 +640,7 @@ const generateOfferLetter = async (req, res) => {
         <div style=" text-align: right" class="signature-div">
          <p>KK Mart</p>
         
-         <img src="${imageSrc}" width="180" height="40" />
+         <img src="${imageSrc}" width="180" height="65" />
          <p>Managing Director</p>
         </div>
       </div>
