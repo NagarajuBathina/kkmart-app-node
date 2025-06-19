@@ -383,15 +383,14 @@ const generatePins = async (req, res) => {
     }
 
     // Generate 1000 unique pins
-    while (pinsSet.size < 1000) {
-      const pin = "KKmart" + randomCode();
+    while (pinsSet.size < 2000) {
+      const pin = "KKc" + randomCode();
       pinsSet.add(pin);
     }
 
     // Prepare for bulk insert
     const pinsArray = Array.from(pinsSet).map((pin) => ({
       pin,
-      status: 1,
     }));
 
     await CustomerPins.bulkCreate(pinsArray);
