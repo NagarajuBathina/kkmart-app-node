@@ -66,19 +66,19 @@ const createCustomer = async (req, res) => {
           message: "Customer created successfully",
         });
       } catch (error) {
-        await transaction.rollback();
+        if (transaction && !transaction.finished) await transaction.rollback();
         return res.status(400).json({ error: error.message });
       }
     }
     if (checkPin && checkPin.status === 0) {
+      if (transaction && !transaction.finished) await transaction.rollback();
       return res.status(400).json({ message: "Pin Already Used" });
     } else {
+      if (transaction && !transaction.finished) await transaction.rollback();
       return res.status(404).json({ message: "Invalid pin" });
     }
   } catch (e) {
-    if (transaction && !transaction.finished) {
-      await transaction.rollback();
-    }
+    if (transaction && !transaction.finished) await transaction.rollback();
     return res.status(500).json({ error: e.message });
   }
 };
@@ -383,8 +383,8 @@ const generatePins = async (req, res) => {
     }
 
     // Generate 1000 unique pins
-    while (pinsSet.size < 2000) {
-      const pin = "KKc" + randomCode();
+    while (pinsSet.size < 5) {
+      const pin = "KKmc1" + randomCode();
       pinsSet.add(pin);
     }
 

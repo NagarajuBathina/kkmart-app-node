@@ -726,7 +726,6 @@ const updateTodayEarnings = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
     const { date, refferelCode } = req.body;
-    console.log(req.body);
     const [updated] = await Employee.update(
       { date: date, daily_earnings: 0 },
       { where: { refferel_code: refferelCode } }
@@ -746,8 +745,6 @@ const forgotPassword = async (req, res) => {
   try {
     const { Employee } = await connectTodb();
     const { phone, password } = req.body;
-
-    console.log(req.body);
 
     if (!phone) {
       return res.status(400).json({ error: "Phone number is required" });
@@ -989,8 +986,10 @@ const createEmployeeByPIN = async (req, res) => {
         employee: newEmployee,
       });
     } else if (checkPin && checkPin.status === 0) {
+      await transaction.rollback();
       return res.status(400).json({ message: "Pin already used" });
     } else {
+      await transaction.rollback();
       return res.status(404).json({ message: "Invalid pin" });
     }
   } catch (e) {

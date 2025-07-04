@@ -15,7 +15,7 @@ const sequelize = new Sequelize("u276789778_kk_mart_new", "u276789778_kk_mart_ne
   port: 3306,
   logging: false,
   pool: {
-    max: 10,
+    max: 30,
     min: 0,
     acquire: 30000,
     idle: 10000,
@@ -51,7 +51,7 @@ module.exports = async () => {
       console.log("=> Using existing connection.");
       return { sequelize, ...Models };
     }
-    await sequelize.sync();
+    // await sequelize.sync();
     await sequelize.authenticate();
     connection.isConnected = true;
     console.log("=>Created a new connection.");
