@@ -1,4 +1,5 @@
 const connectTodb = require("../misc/db");
+const fs = require("fs").promises;
 const { where } = require("sequelize");
 
 const allEmployeesData = async (req, res) => {
@@ -405,6 +406,31 @@ const generateRandomPins = async (req, res) => {
   }
 };
 
+// posted bill boards
+const addBillBoard = async (req, res) => {
+  const { BillBoards } = await connectTodb();
+  try {
+    let fileBase64 = null;
+    if (req.file) {
+      const fileData = await fs.readFile(req.file.path);
+      fileBase64 = `data:${req.file.mimetype};base64,${fileData.toString("base64")}`;
+
+      await fs.unlink(req.file.path).catch(console.error);
+    }
+    if (fileBase64) {
+      req.body.image = fileBase64;
+    }
+    const newBillBoard = await BillBoards.create({ image: req.body.image });
+    if (!newBillBoard) {
+      return res.status(400).json({ message: "Failed to add billboard." });
+    }
+    res.status(201).json({ message: "Billboard added successfully", data: newBillBoard });
+  } catch (error) {
+    console.error("Error adding billboard:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
 module.exports = {
   allEmployeesData,
   allMonthlyRenewalsData,
@@ -419,4 +445,5 @@ module.exports = {
   allRoleWiseEmployeesData,
   getSmaJmaCustomerDetails,
   generateRandomPins,
+  addBillBoard,
 };

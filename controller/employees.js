@@ -1010,6 +1010,29 @@ const fetchMandalsByDistrict = async (req, res) => {
   }
 };
 
+//fetch billboards
+const fetchBillBoards = async (req, res) => {
+  const { BillBoards } = await connectTodb();
+  try {
+    const billBoards = await BillBoards.findAll();
+
+    if (billBoards.length > 0) {
+      return res.status(200).json({
+        message: "Bill boards fetched successfully",
+        success: true,
+        data: billBoards,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "No bill boards found for this user type",
+      });
+    }
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 module.exports = {
   createEmployeeByPayment,
   checkUserDetailsBeforeCreating,
@@ -1025,4 +1048,5 @@ module.exports = {
   forgotPassword,
   createEmployeeByPIN,
   fetchMandalsByDistrict,
+  fetchBillBoards,
 };

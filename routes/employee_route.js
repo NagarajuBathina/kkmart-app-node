@@ -17,6 +17,7 @@ router.put("/update_employee_details", controller.updateEmployeeDetails);
 router.post("/update_today_earinings", controller.updateTodayEarnings);
 router.put("/forgot_password", controller.forgotPassword);
 router.post("/fetch_mandals_by_district", controller.fetchMandalsByDistrict);
+router.get("/fetch_bill_boards", controller.fetchBillBoards);
 
 module.exports = router;
 

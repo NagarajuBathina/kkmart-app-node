@@ -1,5 +1,6 @@
 const express = require("express");
 const controller = require("../controller/admin");
+const upload = require("../middleware/file_upload");
 const router = express.Router();
 
 router.get("/get_employee_data", controller.allEmployeesData);
@@ -14,5 +15,6 @@ router.get("/get_daywise_customers_count", controller.getDayWiseCustomersCount);
 router.get("/get_rolewise_employee_data/:role", controller.allRoleWiseEmployeesData);
 router.get("/get_sma_jma_customer_details/:refferalCode", controller.getSmaJmaCustomerDetails);
 router.post("/generate_random_pins", controller.generateRandomPins);
+router.post("/upload_billboard", upload.single("billboard"), controller.addBillBoard);
 
 module.exports = router;
