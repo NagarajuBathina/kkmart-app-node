@@ -504,7 +504,7 @@ const generateOfferLetter = async (req, res) => {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KK Mart Offer Letter</title>
+    <title>Sri KK Mart Offer Letter</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -636,7 +636,7 @@ const generateOfferLetter = async (req, res) => {
           <p><strong>Signature of Associate</strong></p>
         </div>
         <div style=" text-align: right" class="signature-div">
-         <p>KK Mart</p>
+         <p>Sri KK Mart</p>
         
          <img src="${imageSrc}" width="180" height="70" />
          <p>Managing Director</p>
