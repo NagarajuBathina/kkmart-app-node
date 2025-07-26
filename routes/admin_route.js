@@ -16,5 +16,6 @@ router.get("/get_rolewise_employee_data/:role", controller.allRoleWiseEmployeesD
 router.get("/get_sma_jma_customer_details/:refferalCode", controller.getSmaJmaCustomerDetails);
 router.post("/generate_random_pins", controller.generateRandomPins);
 router.post("/upload_billboard", upload.single("billboard"), controller.addBillBoard);
+router.delete("/delete_bill_board_by_id/:slno", controller.deleteBillBoard);
 
 module.exports = router;

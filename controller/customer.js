@@ -352,7 +352,6 @@ const getRenewalHistory = async (req, res) => {
 const getCustomerPaymentHistory = async (req, res) => {
   try {
     const { Renewal } = await connectTodb();
-    console.log(req.params.joined_by);
     const fetchedData = await Renewal.findAll({
       where: { joined_by: req.params.joined_by, amount: 650 },
       order: [["addedon", "DESC"]],

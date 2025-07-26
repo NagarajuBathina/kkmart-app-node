@@ -5,7 +5,6 @@ const getDetailsByRole = async (req, res) => {
   try {
     const { Employee, Customer } = await connectTodb();
     const { refferalCode, role } = req.body;
-    console.log(req.body);
 
     let fetchedData;
 
@@ -95,7 +94,6 @@ const getAllCategoryDetailsById = async (req, res) => {
     }
     allSMAdata = Array.from(smaSet).map((sma) => JSON.parse(sma));
 
-
     // Get JMAs for all SMAs if SMAs exist
     if (allSMAdata.length > 0) {
       for (const sma of allSMAdata) {
@@ -104,7 +102,6 @@ const getAllCategoryDetailsById = async (req, res) => {
       }
     }
 
-    console.log(allJMAdata);
     // Get customers for all JMAs if JMAs exist
     if (allJMAdata.length > 0) {
       for (const jma of allJMAdata) {
@@ -195,9 +192,7 @@ const getCustomersForMMAandAbove = async (req, res) => {
 const getCustomersDetailsBySMArole = async (req, res) => {
   try {
     const { Employee, Customer } = await connectTodb();
-    console.log(req.params.refferalCode);
     const jmaList = await Employee.findAll({ where: { joined_by: req.params.refferalCode, role: "jma" } });
-    console.log(jmaList);
     if (jmaList.length === 0 || !jmaList) {
       return res.status(400).json({ error: "No JMA data found" });
     }

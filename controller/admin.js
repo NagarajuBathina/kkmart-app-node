@@ -367,7 +367,7 @@ const getSmaJmaCustomerDetails = async (req, res) => {
       },
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: e.message });
   }
 };
 
@@ -424,10 +424,33 @@ const addBillBoard = async (req, res) => {
     if (!newBillBoard) {
       return res.status(400).json({ message: "Failed to add billboard." });
     }
-    res.status(201).json({ message: "Billboard added successfully", data: newBillBoard });
+    return res.status(201).json({ message: "Billboard added successfully", data: newBillBoard });
   } catch (error) {
     console.error("Error adding billboard:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    return res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+//delete bill board
+const deleteBillBoard = async (req, res) => {
+  try {
+    const { BillBoards } = await connectTodb();
+
+    const slno = Number(req.params.slno);
+    if (!Number.isInteger(slno)) {
+      return res.status(400).json({ message: "Invalid slno" });
+    }
+
+    const deleted = await BillBoards.destroy({ where: { slno } });
+
+    if (deleted === 0) {
+      return res.status(404).json({ message: "Billboard not found" });
+    }
+
+    return res.status(200).json({ message: "Deleted successfully", deleted });
+  } catch (e) {
+    console.error("Error deleting billboard:", e);
+    return res.status(500).json({ message: "Internal server error", error: e.message });
   }
 };
 
@@ -446,4 +469,5 @@ module.exports = {
   getSmaJmaCustomerDetails,
   generateRandomPins,
   addBillBoard,
+  deleteBillBoard
 };
