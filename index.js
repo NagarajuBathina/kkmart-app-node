@@ -17,7 +17,7 @@ const employeeBankDetailsRoute = require("./routes/bank_details_route");
 
 const app = express();
 
-const PORT = 1431;
+const PORT = process.env.PORT || 1431;
 
 //middlewares
 app.use(express.json());
