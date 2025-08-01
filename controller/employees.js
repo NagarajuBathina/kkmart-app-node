@@ -3,6 +3,46 @@ const puppeteer = require("puppeteer");
 const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
 const path = require("path");
+const Razorpay = require("razorpay");
+
+// const createOrder = async (req, res) => {
+//   try {
+//     const { amount, currency = "INR", receipt = `rcpt_${Date.now()}` } = req.body;
+
+//     if (!amount) {
+//       return res.status(400).json({ error: "Amount is required" });
+//     }
+
+//     const razorpay = new Razorpay({
+//       key_id: "rzp_live_0PZpYD0UiJbV7m",
+//       key_secret: "pfnkRPxs0jDMEbe7Kkm0eEAG",
+//     });
+
+//     const options = {
+//       amount: amount * 100,
+//       currency,
+//       receipt,
+//       payment_capture: 1,
+//     };
+
+//     const order = await razorpay.orders.create(options);
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "Order created successfully",
+//       order_id: order.id,
+//       currency: order.currency,
+//       amount: order.amount,
+//     });
+//   } catch (error) {
+//     console.error("Error creating Razorpay order:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Order creation failed",
+//       error: error.message,
+//     });
+//   }
+// };
 
 //create employee by payment
 const createEmployeeByPayment = async (req, res) => {
@@ -494,10 +534,6 @@ const generateOfferLetter = async (req, res) => {
       designation = "STATE MARKETING HEAD";
     }
 
-    // Create the HTML content using the employee details
-    // <h5 style="color:rgb(128, 0, 0)">C/o. KISHAN AND KARMIK WELFARE MUTUALLY AIDED COOPERATIVE SOCIETY LIMITED.</h5>
-    //  <p>Mutually Aided</p>
-    //  <p>Cooperative Society Ltd.</p>
     const htmlContent = `
       <!DOCTYPE html>
 <html lang="en">
@@ -622,7 +658,7 @@ const generateOfferLetter = async (req, res) => {
         </p>
         <p><strong>PLACE OF POSTING:</strong> ${placeOfPosting}</p>
         <p style='text-align: justify'>
-          <strong>TERMINATION OF ASSOCIATE:</strong> If If you do not meet the Society’s expectations, there will be no payment claim, and your job will be terminated if no improvement is observed during the 15-day period. The processing fee of *Rs. 2950* is non-refundable.
+          <strong>TERMINATION OF ASSOCIATE:</strong> If you do not meet the Society’s expectations, there will be no payment claim, and your job will be terminated if no improvement is observed during the 15-day period. The processing fee of *Rs. 2950* is non-refundable.
         </p>
       </div>
 
@@ -636,7 +672,7 @@ const generateOfferLetter = async (req, res) => {
           <p><strong>Signature of Associate</strong></p>
         </div>
         <div style=" text-align: right" class="signature-div">
-         <p>Sri KK Mart</p>
+         <p><sup style="font-size:11px">Sri&nbsp</sup>K K MART</p>
         
          <img src="${imageSrc}" width="180" height="70" />
          <p>Managing Director</p>
@@ -650,8 +686,8 @@ const generateOfferLetter = async (req, res) => {
 
     // Generate PDF using Puppeteer
     const browser = await puppeteer.launch({
-      // headless: true,
-      executablePath: "/usr/bin/chromium-browser",
+      headless: true,
+      // executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -1047,4 +1083,5 @@ module.exports = {
   createEmployeeByPIN,
   fetchMandalsByDistrict,
   fetchBillBoards,
+  // createOrder,
 };

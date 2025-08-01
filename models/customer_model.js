@@ -32,11 +32,10 @@ module.exports = (sequelize, dataTypes) => {
         type: dataTypes.INTEGER,
         allowNull: false,
       },
-
       adhaar: {
         type: dataTypes.STRING,
         unique: true,
-        allowNull: false,
+        allowNull: true,
       },
       address: {
         type: dataTypes.STRING,
