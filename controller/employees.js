@@ -3,7 +3,7 @@ const puppeteer = require("puppeteer");
 const fs = require("fs").promises;
 const connectTodb = require("../misc/db");
 const path = require("path");
-const Razorpay = require("razorpay");
+// const Razorpay = require("razorpay");
 
 // const createOrder = async (req, res) => {
 //   try {
