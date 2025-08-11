@@ -382,8 +382,8 @@ const generatePins = async (req, res) => {
     }
 
     // Generate 1000 unique pins
-    while (pinsSet.size < 1000) {
-      const pin = "KKmc5" + randomCode();
+    while (pinsSet.size < 9999) {
+      const pin = "KKmc10" + randomCode();
       pinsSet.add(pin);
     }
 
