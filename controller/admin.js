@@ -469,5 +469,5 @@ module.exports = {
   getSmaJmaCustomerDetails,
   generateRandomPins,
   addBillBoard,
-  deleteBillBoard
+  deleteBillBoard,
 };

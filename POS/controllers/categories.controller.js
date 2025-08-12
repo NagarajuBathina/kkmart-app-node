@@ -1,4 +1,5 @@
 const connectToDatabase = require("../../misc/db");
+const { Op } = require("sequelize");
 
 // add category
 const createCategory = async (req, res) => {

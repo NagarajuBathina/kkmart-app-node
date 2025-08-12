@@ -25,6 +25,8 @@ const unitRoute = require("./POS/routes/unit.route");
 const subCategoryRoute = require("./POS/routes/sub_categories.route");
 const supplierRoute = require("./POS/routes/suppliers.route");
 const comboRoute = require("./POS/routes/combo.route");
+const storeRoute = require("./POS/routes/store.route");
+const userRoute = require("./POS/routes/users.route");
 
 const app = express();
 
@@ -56,6 +58,8 @@ app.use(unitRoute);
 app.use(subCategoryRoute);
 app.use(supplierRoute);
 app.use(comboRoute);
+app.use(storeRoute);
+app.use(userRoute);
 
 app.use("/uploads", express.static("uploads"));
 

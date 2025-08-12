@@ -9,32 +9,31 @@ const login = async (req, res) => {
     const { User } = await connectToDatabase();
     const { username, password } = req.body;
 
-    const user = await User.findOne({ where: { username } });
+    console.log(req.body);
+
+    const user = await User.findOne({ where: { username, password } });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+    // const isValidPassword = await bcrypt.compare(password, user.password);
+    // if (!isValidPassword) {
+    //   return res.status(401).json({ message: "Invalid credentials" });
+    // }
 
-    const token = jwt.sign({ userId: user.user_id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "24h" });
+    const JWT_SECRET = "kkmart.2025.pos.secretkey";
+
+    const token = jwt.sign({ userId: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
 
     await user.update({ last_login: new Date() });
 
-    res.status(200).json({
+    return res.status(200).json({
       token,
-      user: {
-        userId: user.user_id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
+      user: user,
     });
   } catch (error) {
     console.error("Error in login:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Authentication failed",
       error: error.message,
     });

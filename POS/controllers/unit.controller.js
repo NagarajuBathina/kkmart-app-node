@@ -2,6 +2,7 @@ const connectToDatabase = require("../../misc/db");
 
 // Create a new unit
 const createUnit = async (req, res) => {
+  console.log(req.body);
   try {
     const { Unit } = await connectToDatabase();
     if (!req.body.unit) {
@@ -10,6 +11,7 @@ const createUnit = async (req, res) => {
     const data = await Unit.create(req.body);
     return res.status(201).json({ message: "Unit created successfully", data });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ message: err.message });
   }
 };

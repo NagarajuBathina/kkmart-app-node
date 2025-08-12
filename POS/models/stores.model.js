@@ -30,6 +30,10 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: true,
       },
+      code: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       tableName: "pos_stores",

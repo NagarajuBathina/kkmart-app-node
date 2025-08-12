@@ -18,11 +18,11 @@ module.exports = (sequelize, Sequelize) => {
       },
       email: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true,
       },
       role: {
-        type: Sequelize.ENUM("admin", "manager", "cashier"),
+        type: Sequelize.ENUM("admin", "store", "cashier"),
         defaultValue: "cashier",
       },
       last_login: {
@@ -42,6 +42,14 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: true,
+      },
+      store_code: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      store_id: {
+        type: Sequelize.STRING,
+        allowNull: false,
       },
     },
     {

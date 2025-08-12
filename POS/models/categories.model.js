@@ -11,17 +11,17 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      category_slug: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
+      // category_slug: {
+      //   type: Sequelize.STRING,
+      //   allowNull: true,
+      // },
       created_on: {
         type: Sequelize.DATE,
         default: Date.now(),
       },
       status: {
         type: Sequelize.BOOLEAN,
-        default: 1,
+        defaultValue: true,
       },
       is_active: {
         type: Sequelize.BOOLEAN,

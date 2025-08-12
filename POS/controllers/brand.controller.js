@@ -139,6 +139,7 @@ const deleteBrand = async (req, res) => {
 
 // Update existing brand controller to handle logo updates
 const updateBrand = async (req, res) => {
+  console.log(req.body);
   try {
     const { Brand } = await connectToDatabase();
     const brand = await Brand.findOne({
@@ -191,7 +192,7 @@ const updateBrand = async (req, res) => {
     if (req.body.brand) brand.brand = req.body.brand;
     brand.logo = logoBase64;
     if (req.body.status !== undefined) {
-      brand.status = req.body.status === "false" ? false : true;
+      brand.status = req.body.status;
     }
 
     await brand.save();

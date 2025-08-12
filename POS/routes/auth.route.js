@@ -4,7 +4,7 @@ const { login, signup, getDashboardStats } = require("../controllers/auth.contro
 const { authenticateToken, authorizeRole } = require("../../middleware/auth_middleware");
 
 // Public routes
-router.post("/login", login);
+router.post("/login_pos", login);
 // router.post('/signup', authenticateToken, authorizeRole(['admin']), signup); // Only admins can create new users
 router.post("/signup", signup);
 router.get("/test_auth", authenticateToken, (req, res) => {

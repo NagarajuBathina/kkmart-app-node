@@ -27,9 +27,10 @@ const createSupplier = async (req, res) => {
       return res.status(200).json({ message: "Supplier updated successfully" });
     }
     const supplier = await Supplier.create(req.body);
-    res.status(201).json({ supplier, message: "Supplier created successfully" });
+    return res.status(201).json({ supplier, message: "Supplier created successfully" });
   } catch (err) {
-    res.status(500).json({ message: "Error creating supplier", error: err.message });
+    console.log(err);
+    return res.status(500).json({ message: "Error creating supplier", error: err.message });
   }
 };
 
@@ -77,7 +78,7 @@ const updateSupplier = async (req, res) => {
       return res.status(404).json({ message: "Supplier not found" });
     }
     await supplier.update(req.body);
-    return res.status(200).json(supplier);
+    return res.status(200).json({ supplier, message: "updated successfully" });
   } catch (err) {
     return res.status(500).json({ message: "Error updating supplier", error: err.message });
   }
