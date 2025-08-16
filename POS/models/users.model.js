@@ -58,6 +58,5 @@ module.exports = (sequelize, Sequelize) => {
       engine: "InnoDB",
     }
   );
-
   return Users;
 };

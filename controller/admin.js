@@ -462,7 +462,6 @@ module.exports = {
   allEmployeesPaymentsData,
   EmployeeFullDetailsById,
   updateEmployeeDetails,
-  updateEmployeeDetails,
   getDashBoardDetails,
   getDayWiseCustomersCount,
   allRoleWiseEmployeesData,
