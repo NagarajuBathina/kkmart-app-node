@@ -58,20 +58,15 @@ const getAllUsers = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const { Users } = await connectToDatabase();
-  const { user_id } = req.body;
-  console.log(req.body);
   try {
-    if (!user_id) {
-      return res.status(400).json({ error: "Userid is required" });
-    }
-
-    const [updated] = await Users.update(req.body, { where: { user_id } });
+    const [updated] = await Users.update(req.body, { where: { user_id: req.params.id } });
 
     if (updated === 0) {
       return res.status(404).json({ error: "user not found" });
     }
     return res.status(200).json({ message: "Updated successfully" });
   } catch (e) {
+    console.log(e);
     return res.status(500).json(e.message);
   }
 };
