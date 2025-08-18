@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-  const products = sequelize.define(
+  const Products = sequelize.define(
     "pos_products",
     {
       products_id: {
@@ -21,17 +21,17 @@ module.exports = (sequelize, Sequelize) => {
       },
       category_id: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        allowNull: false,
         references: {
-          model: "categories",
+          model: "pos_category",
           key: "category_id",
         },
       },
       supplier_id: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        allowNull: false,
         references: {
-          model: "suppliers",
+          model: "pos_suppliers",
           key: "supplier_id",
         },
       },
@@ -47,7 +47,7 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "units",
+          model: "pos_units",
           key: "unit_id",
         },
       },
@@ -88,7 +88,7 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.INTEGER,
         allowNull: true,
         references: {
-          model: "brands",
+          model: "pos_brands",
           key: "brand_id",
         },
       },
@@ -120,7 +120,7 @@ module.exports = (sequelize, Sequelize) => {
       base_unit_id: {
         type: Sequelize.INTEGER,
         references: {
-          model: "units",
+          model: "pos_units",
           key: "unit_id",
         },
       },
@@ -132,5 +132,5 @@ module.exports = (sequelize, Sequelize) => {
     }
   );
 
-  return products;
+  return Products;
 };

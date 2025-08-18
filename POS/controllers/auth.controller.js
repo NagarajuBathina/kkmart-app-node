@@ -6,12 +6,10 @@ const { Op } = require("sequelize");
 
 const login = async (req, res) => {
   try {
-    const { User } = await connectToDatabase();
+    const { Users } = await connectToDatabase();
     const { username, password } = req.body;
 
-    console.log(req.body);
-
-    const user = await User.findOne({ where: { username, password } });
+    const user = await Users.findOne({ where: { username, password } });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }

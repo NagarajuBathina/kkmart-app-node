@@ -6,9 +6,9 @@ const sequelize = require("sequelize");
 const addProduct = async (req, res) => {
   let transaction;
   try {
-    const { Product, Category, Supplier, Unit, Brand, sequelizeDatabase } = await connectToDatabase();
+    const { Products, Category, Supplier, Unit, Brand, sequelize } = await connectToDatabase();
 
-    transaction = await sequelizeDatabase.transaction();
+    transaction = await sequelize.transaction();
 
     // Input validation - only validate barcode since it's required in DB
     if (!req.body.barcode) {
@@ -18,9 +18,9 @@ const addProduct = async (req, res) => {
     }
 
     // Get or create category, supplier, and brand IDs if provided
-    let category_id = null;
-    let supplier_id = null;
-    let brand_id = null;
+    let category_id = req.body.category_id || null;
+    let supplier_id = req.body.supplier_id || null;
+    let brand_id = req.body.brand_id || null;
     let brand = null;
 
     if (req.body.category) {
@@ -49,7 +49,6 @@ const addProduct = async (req, res) => {
       brand = brandResult;
       brand_id = brandResult.brand_id;
     }
-
     const [unit] = await Unit.findOrCreate({
       where: { unit: req.body.unit },
       defaults: { status: true, created_on: new Date() },
@@ -82,7 +81,7 @@ const addProduct = async (req, res) => {
       created_by: req.body.created_by,
       created_on: new Date(),
       gst: req.body.gst || null,
-      schedule: req.body.schedule || null,
+      shedule: req.body.shedule || null,
       is_active: true,
       discount_price: req.body.discount_price || req.body.products_price,
       base_unit_id: unit.base_unit_id || unit.unit_id,
@@ -94,7 +93,7 @@ const addProduct = async (req, res) => {
     delete productData.brand;
 
     // check if the product already exists and is active false then update the product
-    const existingProduct = await Product.findOne({
+    const existingProduct = await Products.findOne({
       where: { barcode: productData.barcode },
     });
 
@@ -119,7 +118,12 @@ const addProduct = async (req, res) => {
         message: "Product already exists",
       });
     } else {
-      let product = await Product.create(productData, { transaction });
+      if (!category_id || !supplier_id || !brand_id) {
+        return res.status(400).json({
+          message: "Category, Supplier, and Brand are required (either as name or id).",
+        });
+      }
+      let product = await Products.create(productData, { transaction });
 
       // Update unit's no_of_products count
       await Unit.increment("no_of_products", {
@@ -130,7 +134,7 @@ const addProduct = async (req, res) => {
 
       await transaction.commit();
 
-      res.status(201).json({
+      return res.status(201).json({
         message: "Product created successfully",
         product,
       });
@@ -140,7 +144,7 @@ const addProduct = async (req, res) => {
       await transaction.rollback();
     }
     console.error("Error in addProduct:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to create product",
       error: error.message,
     });
@@ -150,8 +154,8 @@ const addProduct = async (req, res) => {
 // get all products
 const getProducts = async (req, res) => {
   try {
-    const { Product, Category, Supplier, Brand, Unit, User } = await connectToDatabase();
-    const products = await Product.findAll({
+    const { Products, Category, Supplier, Brand, Unit, Users } = await connectToDatabase();
+    const products = await Products.findAll({
       where: { is_active: true },
       include: [
         {
@@ -171,7 +175,7 @@ const getProducts = async (req, res) => {
           attributes: ["unit"],
         },
         {
-          model: User,
+          model: Users,
           as: "creator",
           attributes: ["username"],
         },
@@ -194,10 +198,10 @@ const getProducts = async (req, res) => {
       shedule: product.shedule || null,
     }));
 
-    res.status(200).json({ products: transformedProducts });
+    return res.status(200).json({ products: transformedProducts });
   } catch (error) {
     console.error("Error in getProducts:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to fetch products",
       error: error.message,
     });
@@ -207,14 +211,14 @@ const getProducts = async (req, res) => {
 // Get product by barcode
 const getProductByBarcode = async (req, res) => {
   try {
-    const { Product, Category, Supplier, Brand, User, Unit } = await connectToDatabase();
+    const { Products, Category, Supplier, Brand, Users, Unit } = await connectToDatabase();
     const { barcode } = req.params;
 
     if (!barcode) {
       return res.status(400).json({ message: "Barcode is required" });
     }
 
-    const product = await Product.findOne({
+    const product = await Products.findOne({
       where: { barcode, is_active: true },
       include: [
         { model: Category, attributes: ["category"] },
@@ -222,7 +226,7 @@ const getProductByBarcode = async (req, res) => {
         { model: Brand, attributes: ["brand"] },
         { model: Unit, attributes: ["unit"] },
         {
-          model: User,
+          model: Users,
           as: "creator",
           attributes: ["username"],
           required: false,
@@ -252,10 +256,10 @@ const getProductByBarcode = async (req, res) => {
     delete transformedProduct.supplier;
     delete transformedProduct.creator;
 
-    res.status(200).json({ product: transformedProduct });
+    return res.status(200).json({ product: transformedProduct });
   } catch (error) {
     console.error("Error in getProductByBarcode:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to fetch product",
       error: error.message,
     });
@@ -266,16 +270,17 @@ const getProductByBarcode = async (req, res) => {
 const updateProductByBarcode = async (req, res) => {
   let transaction;
   try {
-    const { Product, Category, Supplier, Brand, Unit, sequelizeDatabase } = await connectToDatabase();
+    const { Products, Category, Supplier, Brand, Unit, sequelize } = await connectToDatabase();
 
-    transaction = await sequelizeDatabase.transaction();
+    transaction = await sequelize.transaction();
+
     const { barcode } = req.params;
 
     if (!barcode) {
       return res.status(400).json({ message: "Barcode is required" });
     }
 
-    const existingProduct = await Product.findOne({
+    const existingProduct = await Products.findOne({
       where: { barcode },
       include: [
         { model: Category, attributes: ["category"] },
@@ -350,7 +355,7 @@ const updateProductByBarcode = async (req, res) => {
     await transaction.commit();
 
     // Fetch updated product with associations
-    const result = await Product.findOne({
+    const result = await Products.findOne({
       where: { barcode },
       include: [
         { model: Category, attributes: ["category"] },
@@ -362,20 +367,22 @@ const updateProductByBarcode = async (req, res) => {
       nest: true,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Product updated successfully",
       product: {
         ...result,
-        category: result.category.category,
-        supplier_name: result.supplier.suppliers_name,
-        brand: result.brand.brand,
-        unit: result.unit.unit,
+        // category: result.category.category,
+        // supplier_name: result.supplier.suppliers_name,
+        // brand: result.brand.brand,
+        // unit: result.unit.unit,
       },
     });
   } catch (error) {
-    if (transaction) await transaction.rollback();
+    if (transaction && !transaction.finished) {
+      await transaction.rollback();
+    }
     console.error("Error in updateProductByBarcode:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to update product",
       error: error.message,
     });
@@ -386,10 +393,10 @@ const updateProductByBarcode = async (req, res) => {
 const deleteProduct = async (req, res) => {
   let transaction;
   try {
-    const { Product, OrderItem, Unit, sequelizeDatabase } = await connectToDatabase();
+    const { Products, OrderItem, Unit, sequelize } = await connectToDatabase();
     const { barcode } = req.params;
 
-    transaction = await sequelizeDatabase.transaction();
+    transaction = await sequelize.transaction();
 
     if (!barcode) {
       return res.status(400).json({
@@ -398,7 +405,7 @@ const deleteProduct = async (req, res) => {
     }
 
     // Find the product first
-    const product = await Product.findOne({
+    const product = await Products.findOne({
       where: { barcode },
       transaction,
     });
@@ -421,7 +428,7 @@ const deleteProduct = async (req, res) => {
 
     await transaction.commit();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Product and related records deleted successfully",
       deletedProduct: {
         products_id: product.products_id,
@@ -432,7 +439,7 @@ const deleteProduct = async (req, res) => {
   } catch (error) {
     if (transaction) await transaction.rollback();
     console.error("Error in deleteProduct:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to delete product",
       error: error.message,
     });
@@ -629,7 +636,7 @@ const bulkUploadProducts = async (req, res) => {
 // search products
 const searchProducts = async (req, res) => {
   try {
-    const { Product, Category, Supplier, Brand } = await connectToDatabase();
+    const { Products, Category, Supplier, Brand } = await connectToDatabase();
     const { search } = req.query;
 
     if (!search) {
@@ -638,7 +645,7 @@ const searchProducts = async (req, res) => {
       });
     }
 
-    const products = await Product.findAll({
+    const products = await Products.findAll({
       where: {
         is_active: true,
         [Op.or]: [
@@ -685,15 +692,16 @@ const searchProducts = async (req, res) => {
       status: product.status,
       categories_name: product["category.category"],
       suppliers_name: product["supplier.suppliers_name"],
+      created_on: product.created_on,
     }));
 
-    res.status(200).json({
+    return res.status(200).json({
       count: transformedProducts.length,
       products: transformedProducts,
     });
   } catch (error) {
     console.error("Error in searchProducts:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to search products",
       error: error.message,
     });

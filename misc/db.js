@@ -27,6 +27,7 @@ const unitsModel = require("../POS/models/units.model.js");
 const usersModel = require("../POS/models/users.model.js");
 const comboModel = require("../POS/models/combos.model.js");
 const comboProductModel = require("../POS/models/combo_products.model.js");
+const storeProductsModel = require("../POS/models/store.products.model.js");
 
 const sequelize = new Sequelize("u276789778_kk_mart_new", "u276789778_kk_mart_new", "123@Newkkmart", {
   dialect: "mysql",
@@ -68,6 +69,47 @@ const Unit = unitsModel(sequelize, Sequelize);
 const Users = usersModel(sequelize, Sequelize);
 const Combo = comboModel(sequelize, Sequelize);
 const ComboProduct = comboProductModel(sequelize, Sequelize);
+const StoreProducts = storeProductsModel(sequelize, Sequelize);
+
+// Define associations
+Products.belongsTo(Category, {
+  foreignKey: "category_id",
+  targetKey: "category_id",
+  onDelete: "CASCADE",
+});
+
+Products.belongsTo(Supplier, {
+  foreignKey: "supplier_id",
+  targetKey: "suppliers_id",
+  onDelete: "CASCADE",
+});
+
+Products.belongsTo(Brand, {
+  foreignKey: "brand_id",
+  targetKey: "brand_id",
+});
+
+Products.belongsTo(Users, {
+  foreignKey: "created_by",
+  targetKey: "user_id",
+  as: "creator",
+});
+
+Products.belongsTo(Unit, {
+  foreignKey: "unit_id",
+  targetKey: "unit_id",
+});
+
+Category.hasMany(Products, {
+  foreignKey: "category_id",
+  sourceKey: "category_id",
+});
+
+Users.hasMany(Products, {
+  foreignKey: "created_by",
+  sourceKey: "user_id",
+  as: "created_products",
+});
 
 const Models = {
   //app
@@ -97,6 +139,7 @@ const Models = {
   Users,
   Combo,
   ComboProduct,
+  StoreProducts,
 };
 const connection = {};
 

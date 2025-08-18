@@ -17,7 +17,7 @@ router.get("/get_product_barcode_details/:barcode", getProductByBarcode);
 router.put("/update_product/:barcode", updateProductByBarcode);
 router.delete("/delete_product/:barcode", deleteProduct);
 router.get("/search_products", searchProducts);
-
+ 
 module.exports = router;
 
 
