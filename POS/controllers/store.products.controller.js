@@ -5,7 +5,7 @@ const sequelize = require("sequelize");
 const addProductsToStore = async (req, res) => {
   let transaction;
   const { product_ids, store_id, product_quantities } = req.body;
-  console.log(req.body);
+
   try {
     const { sequelize, Products, StoreProducts } = await connectToDatabase();
     transaction = await sequelize.transaction();
@@ -23,7 +23,7 @@ const addProductsToStore = async (req, res) => {
         where: { products_id: productId, is_active: true },
         transaction,
       });
-      console.log(productData);
+
       if (!productData) {
         await transaction.rollback();
         return res.status(404).json({ message: `Product ${productId} not found` });
