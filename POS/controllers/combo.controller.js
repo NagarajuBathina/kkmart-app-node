@@ -14,6 +14,9 @@ const addCombo = async (req, res) => {
       created_by,
       products,
     } = req.body;
+
+    console.log(req.body);
+
     // Create the combo
     const newCombo = await Combo.create({
       combo_name,
@@ -45,13 +48,13 @@ const addCombo = async (req, res) => {
     }
     // Attach comboProducts to the response
     newCombo.dataValues.comboProducts = comboProducts;
-    res.status(201).json({
+    return res.status(201).json({
       message: "Combo added successfully",
       data: newCombo,
     });
   } catch (error) {
     console.error("Error adding combo:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 

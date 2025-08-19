@@ -111,6 +111,46 @@ Users.hasMany(Products, {
   as: "created_products",
 });
 
+StoreProducts.belongsTo(Products, {
+  foreignKey: "product_id",
+  targetKey: "products_id",
+});
+
+StoreProducts.belongsTo(Stores, {
+  foreignKey: "store_id",
+  targetKey: "store_id",
+});
+
+ComboProduct.belongsTo(Combo, {
+  foreignKey: "combo_id",
+  targetKey: "combo_id",
+  onDelete: "CASCADE",
+});
+
+ComboProduct.belongsTo(Products, {
+  foreignKey: "product_id",
+  targetKey: "products_id",
+  onDelete: "CASCADE",
+});
+
+Combo.hasMany(ComboProduct, {
+  foreignKey: "combo_id",
+  sourceKey: "combo_id",
+  onDelete: "CASCADE",
+});
+
+Combo.belongsTo(Users, {
+  foreignKey: "created_by",
+  targetKey: "user_id",
+  onDelete: "SET NULL",
+});
+
+Combo.belongsTo(Users, {
+  foreignKey: "updated_by",
+  targetKey: "user_id",
+  onDelete: "SET NULL",
+});
+
 const Models = {
   //app
   Employee,

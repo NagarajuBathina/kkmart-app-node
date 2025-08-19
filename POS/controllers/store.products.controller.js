@@ -1,6 +1,5 @@
 const connectToDatabase = require("../../misc/db");
-const { Op } = require("sequelize");
-const sequelize = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 
 const addProductsToStore = async (req, res) => {
   let transaction;
@@ -63,4 +62,96 @@ const addProductsToStore = async (req, res) => {
   }
 };
 
-module.exports = { addProductsToStore };
+const getStoreProductDetails = async (req, res) => {
+  const { Products, Stores, StoreProducts } = await connectToDatabase();
+  const { storeid } = req.params;
+  console.log(storeid);
+  try {
+    const storeData = await StoreProducts.findAll({
+      where: { store_id: storeid },
+      include: [
+        {
+          model: Products,
+        },
+        {
+          model: Stores,
+        },
+      ],
+      raw: true,
+      nest: true,
+      order: [["added_on", "DESC"]],
+    });
+
+    if (!storeData || storeData.length === 0) {
+      return res.status(400).json({ message: "No data found" });
+    }
+
+    return res.status(200).json({ data: storeData });
+  } catch (error) {
+    console.error("Error :", error);
+    return res.status(500).json({
+      message: "Failed to fetch store",
+      error: error.message,
+    });
+  }
+};
+
+const updateStroeProductChecked = async (req, res) => {
+  const { StoreProducts } = await connectToDatabase();
+  const { remarks, remarks_quantity, status, checked_on } = req.body;
+  const { id } = req.params;
+  try {
+    const [updated] = await StoreProducts.update(
+      {
+        remarks,
+        remarks_quantity,
+        status,
+        checked_on,
+      },
+      { where: { id } }
+    );
+
+    if (updated === 0) {
+      return res.status(400).json({ message: "no data found" });
+    }
+
+    return res.status(200).json({ message: "updated successfully", success: true });
+  } catch (error) {
+    console.error("Error :", error);
+    return res.status(500).json({
+      message: "Failed to fetch store",
+      error: error.message,
+    });
+  }
+};
+
+const updateStroeProductConfirmed = async (req, res) => {
+  const { StoreProducts } = await connectToDatabase();
+  const { remarks_quantity, status, confirmed_on } = req.body;
+  const { id } = req.params;
+  try {
+    const [updated] = await StoreProducts.update(
+      {
+        quantity: Sequelize.literal(`quantity - ${parseInt(remarks_quantity, 10)}`),
+        remarks_quantity,
+        status,
+        confirmed_on,
+      },
+      { where: { id } }
+    );
+
+    if (updated === 0) {
+      return res.status(400).json({ message: "no data found" });
+    }
+
+    return res.status(200).json({ message: "updated successfully", success: true });
+  } catch (error) {
+    console.error("Error :", error);
+    return res.status(500).json({
+      message: "Failed to fetch store",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { addProductsToStore, getStoreProductDetails, updateStroeProductChecked, updateStroeProductConfirmed };

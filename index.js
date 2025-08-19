@@ -28,6 +28,7 @@ const comboRoute = require("./POS/routes/combo.route");
 const storeRoute = require("./POS/routes/store.route");
 const userRoute = require("./POS/routes/users.route");
 const storeProductRoute = require("./POS/routes/store.product.route");
+const billingRoute = require("./POS/routes/billing.route");
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use(comboRoute);
 app.use(storeRoute);
 app.use(userRoute);
 app.use(storeProductRoute);
+app.use(billingRoute);
 
 app.use("/uploads", express.static("uploads"));
 

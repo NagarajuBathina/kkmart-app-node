@@ -10,10 +10,18 @@ module.exports = (sequelize, Sequelize) => {
       product_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: "pos_products",
+          key: "products_id",
+        },
       },
       store_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: "pos_stores",
+          key: "store_id",
+        },
       },
       quantity: {
         type: Sequelize.INTEGER,
@@ -33,6 +41,14 @@ module.exports = (sequelize, Sequelize) => {
       },
       added_on: {
         type: Sequelize.DATE,
+        allowNull: true,
+      },
+      checked_on: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      confirmed_on: {
+        type: Sequelize.STRING,
         allowNull: true,
       },
     },
