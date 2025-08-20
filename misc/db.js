@@ -151,6 +151,56 @@ Combo.belongsTo(Users, {
   onDelete: "SET NULL",
 });
 
+////////////////////////////////
+
+Products.hasMany(OrderItems, {
+  foreignKey: "product_id",
+  sourceKey: "products_id",
+  onDelete: "CASCADE",
+});
+
+OrderItems.belongsTo(Products, {
+  foreignKey: "product_id",
+  targetKey: "products_id",
+});
+
+Orders.belongsTo(Users, {
+  foreignKey: "user_id",
+  targetKey: "user_id",
+});
+
+Users.hasMany(Orders, {
+  foreignKey: "user_id",
+  sourceKey: "user_id",
+});
+
+Orders.hasMany(OrderItems, {
+  foreignKey: "order_id",
+  sourceKey: "orders_id",
+  onDelete: "CASCADE",
+});
+
+OrderItems.belongsTo(Orders, {
+  foreignKey: "order_id",
+  targetKey: "orders_id",
+});
+
+// Add Order <-> Customer association
+// Orders.belongsTo(Customer, {
+//   foreignKey: "customer_id",
+//   targetKey: "customers_id"
+// });
+
+// Customer.hasMany(Orders, {
+//   foreignKey: "customer_id",
+//   sourceKey: "customers_id"
+// });
+
+Orders.belongsTo(Users, {
+  foreignKey: "user_id",
+  targetKey: "user_id",
+});
+
 const Models = {
   //app
   Employee,

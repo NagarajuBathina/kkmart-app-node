@@ -24,11 +24,11 @@ const brandRoute = require("./POS/routes/brand.route");
 const unitRoute = require("./POS/routes/unit.route");
 const subCategoryRoute = require("./POS/routes/sub_categories.route");
 const supplierRoute = require("./POS/routes/suppliers.route");
-const comboRoute = require("./POS/routes/combo.route");
 const storeRoute = require("./POS/routes/store.route");
 const userRoute = require("./POS/routes/users.route");
 const storeProductRoute = require("./POS/routes/store.product.route");
 const billingRoute = require("./POS/routes/billing.route");
+const comboRoute = require("./POS/routes/combo.route");
 
 const app = express();
 
@@ -59,11 +59,11 @@ app.use(brandRoute);
 app.use(unitRoute);
 app.use(subCategoryRoute);
 app.use(supplierRoute);
-app.use(comboRoute);
 app.use(storeRoute);
 app.use(userRoute);
 app.use(storeProductRoute);
 app.use(billingRoute);
+app.use(comboRoute);
 
 app.use("/uploads", express.static("uploads"));
 

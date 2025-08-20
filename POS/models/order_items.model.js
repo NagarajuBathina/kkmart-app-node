@@ -23,6 +23,10 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.DECIMAL(10, 2),
         allowNull: false,
       },
+      id_combo: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
     },
     {
       timestamps: false,

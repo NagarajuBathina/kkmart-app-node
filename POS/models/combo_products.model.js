@@ -17,15 +17,15 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      quantity_in_combo: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      available_quantity: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      unit_price: {
+      // quantity_in_combo: {
+      //   type: DataTypes.INTEGER,
+      //   allowNull: true,
+      // },
+      // available_quantity: {
+      //   type: DataTypes.INTEGER,
+      //   allowNull: true,
+      // },
+      price: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
       },

@@ -3,5 +3,6 @@ const router = express.Router();
 const controller = require("../controllers/billing.controller");
 
 router.get("/get_store_product_details", controller.searchStoreProducts);
+router.post("/billing", controller.billing);
 
 module.exports = router;

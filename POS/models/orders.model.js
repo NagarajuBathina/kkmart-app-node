@@ -37,6 +37,13 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
+      customer_phone: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      is_existing_customer: {
+        type: Sequelize.BOOLEAN,
+      },
     },
     {
       timestamps: false,

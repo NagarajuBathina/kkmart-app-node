@@ -1,7 +1,7 @@
-const express = require('express');
+const express = require("express");
+const controller = require("../controllers/combo.controller");
 const router = express.Router();
-const { addCombo } = require('../controllers/combo.controller');
 
-router.post('/add_combo', addCombo);
+router.post("/create_combo", controller.addComboProduct);
 
 module.exports = router;

@@ -21,10 +21,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
       },
-      combo_discount_price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: true,
-      },
       combo_quantity: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -42,6 +38,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      combo_gst: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
       created_by: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -57,6 +57,10 @@ module.exports = (sequelize, DataTypes) => {
           model: "users",
           key: "user_id",
         },
+      },
+      store_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
     },
     {
