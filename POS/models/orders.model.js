@@ -10,14 +10,23 @@ module.exports = (sequelize, Sequelize) => {
       customer_id: {
         type: Sequelize.INTEGER,
         allowNull: true,
+        references: {
+          model: "customer",
+          key: "slno",
+        },
       },
       user_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      store_id: {
         type: Sequelize.INTEGER,
         allowNull: true,
       },
       order_date: {
         type: Sequelize.DATE,
         allowNull: false,
+        defaultValue: Sequelize.NOW,
       },
       total_amount: {
         type: Sequelize.DECIMAL(10, 2),
@@ -32,17 +41,17 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      discount: {
-        type: Sequelize.DECIMAL(10, 2),
-        allowNull: true,
-        defaultValue: 0,
-      },
       customer_phone: {
         type: Sequelize.STRING,
         allowNull: false,
       },
       is_existing_customer: {
         type: Sequelize.BOOLEAN,
+        // allowNull: false,
+      },
+      store_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
       },
     },
     {

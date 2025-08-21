@@ -28,6 +28,7 @@ const usersModel = require("../POS/models/users.model.js");
 const comboModel = require("../POS/models/combos.model.js");
 const comboProductModel = require("../POS/models/combo_products.model.js");
 const storeProductsModel = require("../POS/models/store.products.model.js");
+const dummyStoreProductsModel = require("../POS/models/dummy.store.products.model.js");
 
 const sequelize = new Sequelize("u276789778_kk_mart_new", "u276789778_kk_mart_new", "123@Newkkmart", {
   dialect: "mysql",
@@ -57,7 +58,7 @@ const BillBoards = billBaordModel(sequelize, Sequelize);
 //pos
 const Brand = brandsModel(sequelize, Sequelize);
 const Category = categoryModel(sequelize, Sequelize);
-const Customers = customersModel(sequelize, Sequelize);
+// const Customers = customersModel(sequelize, Sequelize);
 const Employees = employeesModel(sequelize, Sequelize);
 const OrderItems = OrderItemsModel(sequelize, Sequelize);
 const Orders = ordersModel(sequelize, Sequelize);
@@ -70,6 +71,7 @@ const Users = usersModel(sequelize, Sequelize);
 const Combo = comboModel(sequelize, Sequelize);
 const ComboProduct = comboProductModel(sequelize, Sequelize);
 const StoreProducts = storeProductsModel(sequelize, Sequelize);
+const DummyStoreProducts = dummyStoreProductsModel(sequelize, Sequelize);
 
 // Define associations
 Products.belongsTo(Category, {
@@ -201,6 +203,21 @@ Orders.belongsTo(Users, {
   targetKey: "user_id",
 });
 
+Customer.hasMany(Orders, {
+  foreignKey: "customer_id",
+  targetKey: "slno",
+});
+
+DummyStoreProducts.belongsTo(Products, {
+  foreignKey: "product_id",
+  targetKey: "products_id",
+});
+
+DummyStoreProducts.belongsTo(Stores, {
+  foreignKey: "store_id",
+  targetKey: "store_id",
+});
+
 const Models = {
   //app
   Employee,
@@ -217,7 +234,6 @@ const Models = {
   //pos
   Brand,
   Category,
-  Customers,
   Employees,
   OrderItems,
   Orders,
@@ -230,6 +246,7 @@ const Models = {
   Combo,
   ComboProduct,
   StoreProducts,
+  DummyStoreProducts,
 };
 const connection = {};
 

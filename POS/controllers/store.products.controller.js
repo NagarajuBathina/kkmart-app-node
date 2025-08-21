@@ -1,12 +1,12 @@
 const connectToDatabase = require("../../misc/db");
-const { Op, Sequelize } = require("sequelize");
+const { Op, Sequelize, where } = require("sequelize");
 
 const addProductsToStore = async (req, res) => {
   let transaction;
   const { product_ids, store_id, product_quantities } = req.body;
 
   try {
-    const { sequelize, Products, StoreProducts } = await connectToDatabase();
+    const { sequelize, Products, StoreProducts, DummyStoreProducts } = await connectToDatabase();
     transaction = await sequelize.transaction();
 
     // Convert comma-separated strings into arrays
@@ -46,7 +46,7 @@ const addProductsToStore = async (req, res) => {
         added_on: new Date(),
       };
 
-      await StoreProducts.create(finalData, { transaction });
+      await DummyStoreProducts.create(finalData, { transaction });
     }
     await transaction.commit();
     return res.status(200).json({ message: "Products added to store successfully" });
@@ -63,11 +63,11 @@ const addProductsToStore = async (req, res) => {
 };
 
 const getStoreProductDetails = async (req, res) => {
-  const { Products, Stores, StoreProducts } = await connectToDatabase();
+  const { Products, Stores, DummyStoreProducts } = await connectToDatabase();
   const { storeid } = req.params;
   console.log(storeid);
   try {
-    const storeData = await StoreProducts.findAll({
+    const storeData = await DummyStoreProducts.findAll({
       where: { store_id: storeid },
       include: [
         {
@@ -97,11 +97,11 @@ const getStoreProductDetails = async (req, res) => {
 };
 
 const updateStroeProductChecked = async (req, res) => {
-  const { StoreProducts } = await connectToDatabase();
+  const { DummyStoreProducts } = await connectToDatabase();
   const { remarks, remarks_quantity, status, checked_on } = req.body;
   const { id } = req.params;
   try {
-    const [updated] = await StoreProducts.update(
+    const [updated] = await DummyStoreProducts.update(
       {
         remarks,
         remarks_quantity,
@@ -126,26 +126,48 @@ const updateStroeProductChecked = async (req, res) => {
 };
 
 const updateStroeProductConfirmed = async (req, res) => {
-  const { StoreProducts } = await connectToDatabase();
-  const { remarks_quantity, status, confirmed_on } = req.body;
+  let transaction;
+  const { StoreProducts, DummyStoreProducts, sequelize } = await connectToDatabase();
+  const { remarks_quantity, status, confirmed_on, product_id, store_id, quantity } = req.body;
   const { id } = req.params;
+
+  transaction = await sequelize.transaction();
+
+  console.log(req.body);
   try {
-    const [updated] = await StoreProducts.update(
+    const [updated] = await DummyStoreProducts.update(
       {
-        quantity: Sequelize.literal(`quantity - ${parseInt(remarks_quantity, 10)}`),
+        // quantity: Sequelize.literal(`quantity - ${parseInt(remarks_quantity, 10)}`),
         remarks_quantity,
         status,
         confirmed_on,
       },
-      { where: { id } }
+      { where: { id }, transaction }
     );
 
     if (updated === 0) {
       return res.status(400).json({ message: "no data found" });
     }
 
+    const isExistingItem = await StoreProducts.findOne({
+      where: { product_id: product_id, store_id: store_id },
+    });
+
+    console.log(isExistingItem);
+
+    if (isExistingItem) {
+      isExistingItem.quantity = Number(isExistingItem.quantity) + Number(quantity);
+      await isExistingItem.save({ transaction });
+    } else {
+      await StoreProducts.create(req.body, { transaction });
+    }
+
+    await transaction.commit();
     return res.status(200).json({ message: "updated successfully", success: true });
   } catch (error) {
+    if (transaction && !transaction.finished) {
+      await transaction.rollback();
+    }
     console.error("Error :", error);
     return res.status(500).json({
       message: "Failed to fetch store",
