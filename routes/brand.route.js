@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../../middleware/file_upload");
+const upload = require("../middleware/file_upload");
 const {
   getAllBrands,
   getBrandById,
@@ -8,8 +8,7 @@ const {
   updateBrand,
   deleteBrand,
   getBrandNames,
-} = require("../controllers/brand.controller");
-const { authenticate, authorize } = require("../../middleware/auth_middleware");
+} = require("../POS/controllers/brand.controller");
 
 router.get("/get_all_brands", getAllBrands);
 router.get("/get_brand/:id", getBrandById);
