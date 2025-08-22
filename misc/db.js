@@ -203,10 +203,15 @@ Orders.belongsTo(Users, {
   targetKey: "user_id",
 });
 
-Customer.hasMany(Orders, {
+Orders.belongsTo(Customer, {
   foreignKey: "customer_id",
   targetKey: "slno",
 });
+
+// Customer.hasMany(Orders, {
+//   foreignKey: "customer_id",
+//   targetKey: "slno",
+// });
 
 DummyStoreProducts.belongsTo(Products, {
   foreignKey: "product_id",

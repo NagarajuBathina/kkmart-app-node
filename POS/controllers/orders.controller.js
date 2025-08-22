@@ -1,4 +1,5 @@
 const connectToDatabase = require("../../misc/db");
+const { Op } = require("sequelize");
 
 const checkout = async (req, res) => {
   let transaction;
@@ -167,16 +168,29 @@ const checkout = async (req, res) => {
 // get all orders
 const getAllOrders = async (req, res) => {
   try {
-    const { Order, OrderItem, Product, User, Customer, Brand, Unit } = await connectToDatabase();
+    const { Orders, OrderItems, Products, Users, Customer } = await connectToDatabase();
+    const { store_id, user_id } = req.body;
 
-    const orders = await Order.findAll({
+    let whereCondition = {};
+
+    if (store_id && user_id) {
+      whereCondition = {
+        store_id: store_id,
+        user_id: user_id,
+      };
+    } else if (store_id) {
+      whereCondition = { store_id: store_id };
+    }
+
+    const orders = await Orders.findAll({
+      where: whereCondition,
       include: [
         {
-          model: OrderItem,
-          attributes: ["product_id", "quantity", "price"],
+          model: OrderItems,
+          attributes: ["product_id", "quantity", "price", "is_combo"],
           include: [
             {
-              model: Product,
+              model: Products,
               attributes: [
                 "products_name",
                 "barcode",
@@ -189,54 +203,51 @@ const getAllOrders = async (req, res) => {
                 "unit_id",
                 "shedule",
               ],
-              include: [
-                {
-                  model: Brand,
-                  attributes: ["brand"],
-                },
-                {
-                  model: Unit,
-                  attributes: ["unit"],
-                },
-              ],
             },
           ],
         },
         {
           model: Customer,
-          attributes: ["customer_name", "customer_phone", "discount"],
+          attributes: ["name", "phone"],
         },
         {
-          model: User,
+          model: Users,
           attributes: ["username", "user_id"],
         },
       ],
-      attributes: ["orders_id", "order_date", "total_amount", "payment_method", "notes", "discount"],
     });
+
+    if (!orders || orders.length === 0) {
+      return res.status(400).json({ message: "no orders found" });
+    }
 
     // Transform the response
     const transformedOrders = orders.map((order) => {
       // Ensure order_date is a valid Date object
       const orderDate = new Date(order.order_date);
 
-      const cart = order.order_items.map((item) => {
-        const gst = parseFloat(item.product.gst || 0);
+      const cart = (order.pos_order_items || []).map((item) => {
+        const gst = parseFloat(item.pos_product?.gst || 0);
         return {
-          barcode: item.product.barcode,
-          name: item.product.products_name,
-          description: item.product.products_description || "",
+          barcode: item.pos_product?.barcode,
+          name: item.pos_product?.products_name,
+          description: item.pos_product?.products_description || "",
           price: parseFloat(item.price),
           quantity: item.quantity,
-          batch_number: item.product.batch_number,
-          manufacturing_date: item.product.manufacturing_date
-            ? new Date(item.product.manufacturing_date).toISOString().split("T")[0]
-            : null,
-          expiry_date: item.product.expiry_date ? new Date(item.product.expiry_date).toISOString().split("T")[0] : null,
-          brand: item.product.brand?.brand || "",
-          unit: item.product.unit?.unit || "",
-          shedule: item.product.shedule || "",
-          sgst: gst / 2,
-          cgst: gst / 2,
+          combo_item: item.is_combo,
+          batch_number: item.pos_product?.batch_number,
+          // manufacturing_date: item.Product?.manufacturing_date
+          //   ? new Date(item.Product.manufacturing_date).toISOString().split("T")[0]
+          //   : null,
+          // expiry_date: item.Product?.expiry_date
+          //   ? new Date(item.Product.expiry_date).toISOString().split("T")[0]
+          //   : null,
+          brand_id: item.Product?.brand_id,
+          unit_id: item.Product?.unit_id,
+          // shedule: item.Product?.shedule || "",
+          // sgst: gst / 2,
+          // cgst: gst / 2,
+          gst: gst,
         };
       });
 
@@ -244,14 +255,14 @@ const getAllOrders = async (req, res) => {
         cart,
         total: parseFloat(order.total_amount),
         paymentMethod: order.payment_method.toLowerCase(),
-        customerDetails: order.customer
+        customerDetails: order.app_customer
           ? {
-              customerName: order.customer.customer_name,
-              customerMobile: order.customer.customer_phone?.toString(),
+              customerName: order.app_customer.name,
+              customerMobile: order.app_customer.phone?.toString(),
             }
           : null,
-        discount_percentage: order.discount ? parseFloat(order.discount) : 0,
-        user_id: order.user?.user_id || null,
+        user_id: order.pos_user?.user_id || null,
+        user_name: order.pos_user?.username || null,
         order_id: order.orders_id,
         order_date: orderDate.toLocaleDateString("en-IN"),
         invoice_number: `INV-${order.orders_id}`,
@@ -264,13 +275,13 @@ const getAllOrders = async (req, res) => {
       };
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Orders fetched successfully",
       orders: transformedOrders,
     });
   } catch (error) {
     console.error("Error in getAllOrders:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to fetch orders",
       error: error.message,
     });
@@ -397,23 +408,6 @@ const getSalesDetailsById = async (req, res) => {
     });
   }
 };
-
-// update sales details by id
-// const updateSalesDetailsById = async (req, res) => {
-//   try {
-//     const { Order, OrderItems, Customer, User, sequelizeDatabase} = await connectToDatabase();
-//     const order = await Order.findByPk(req.params.id);
-//     if (!order) {
-//       return res.status(404).json({message: "Sales not found"});
-//     }
-
-//   }catch(error){
-//     return res.status(500).json({
-//       message: "Failed to updated sales details",
-//       error: error.message,
-//     })
-//   }
-// }
 
 module.exports = {
   checkout,

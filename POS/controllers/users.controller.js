@@ -1,5 +1,5 @@
 const connectToDatabase = require("../../misc/db");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 
 const createUser = async (req, res) => {
   const { Users } = await connectToDatabase();
@@ -71,4 +71,25 @@ const updateUser = async (req, res) => {
   }
 };
 
-module.exports = { createUser, getAllUsers, updateUser };
+const getStoreUsers = async (req, res) => {
+  const { Users } = await connectToDatabase();
+
+  try {
+    const users = await Users.findAndCountAll({
+      where: { store_id: req.params.storeid },
+    });
+
+    return res.status(200).json({
+      message: "users retrieved successfully",
+      users: users.rows,
+    });
+  } catch (error) {
+    console.error("Error in getAllusers:", error);
+    return res.status(500).json({
+      message: "Failed to retrieve users",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { createUser, getAllUsers, updateUser, getStoreUsers };

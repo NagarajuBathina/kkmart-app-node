@@ -1,63 +1,8 @@
 const connectToDatabase = require("../../misc/db");
-const { Op, Sequelize } = require("sequelize");
+const { Op, Sequelize, where, Model } = require("sequelize");
+
+
 // add combo
-const addCombo = async (req, res) => {
-  try {
-    const { Combo, ComboProduct, Product } = await connectToDatabase();
-    const {
-      combo_name,
-      combo_description,
-      combo_price,
-      combo_discount_price,
-      combo_quantity,
-      status,
-      created_by,
-      products,
-    } = req.body;
-
-    console.log(req.body);
-
-    // Create the combo
-    const newCombo = await Combo.create({
-      combo_name,
-      combo_description,
-      combo_price,
-      combo_discount_price,
-      combo_quantity,
-      status,
-      created_by,
-    });
-    // Create ComboProduct entries for each product in the products array
-    const comboProducts = [];
-    if (Array.isArray(products)) {
-      for (const prod of products) {
-        // Find the product_id by barcode
-        const productRecord = await Product.findOne({ where: { barcode: prod.barcode } });
-        const product_id = productRecord ? productRecord.products_id : null;
-        const comboProduct = await ComboProduct.create({
-          barcode: prod.barcode,
-          products_name: prod.products_name,
-          quantity_in_combo: prod.quantity_in_combo,
-          available_quantity: prod.available_quantity,
-          unit_price: prod.unit_price,
-          combo_id: newCombo.combo_id,
-          product_id: product_id,
-        });
-        comboProducts.push(comboProduct);
-      }
-    }
-    // Attach comboProducts to the response
-    newCombo.dataValues.comboProducts = comboProducts;
-    return res.status(201).json({
-      message: "Combo added successfully",
-      data: newCombo,
-    });
-  } catch (error) {
-    console.error("Error adding combo:", error);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
-
 const addComboProduct = async (req, res) => {
   let transaction;
   try {
@@ -77,7 +22,6 @@ const addComboProduct = async (req, res) => {
       combo_gst,
     } = req.body;
 
-    console.log(req.body);
 
     const isComboNameExist = await Combo.findOne({ where: { combo_name: combo_name.trim() } });
 
@@ -142,6 +86,24 @@ const addComboProduct = async (req, res) => {
   }
 };
 
+const getComboItemsOfStore = async (req, res) => {
+  const { Combo, ComboProduct } = await connectToDatabase();
+  try {
+    const comboProducts = await Combo.findAll({
+      where: { store_id: req.params.storeid },
+      include: [{ model: ComboProduct }],
+    });
+    if (!comboProducts || comboProducts.length === 0) {
+      return res.status(400).json({ message: "no combos found for this store" });
+    }
+    return res.status(200).json({ data: comboProducts, success: true, message: "fetched succssfully" });
+  } catch (error) {
+    console.error("Error adding combo:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   addComboProduct,
+  getComboItemsOfStore,
 };
