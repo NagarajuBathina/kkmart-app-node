@@ -62,13 +62,13 @@ const addProductsToStore = async (req, res) => {
   }
 };
 
-const getStoreProductDetails = async (req, res) => {
+const getDummyStoreProductDetails = async (req, res) => {
   const { Products, Stores, DummyStoreProducts } = await connectToDatabase();
   const { storeid } = req.params;
   console.log(storeid);
   try {
     const storeData = await DummyStoreProducts.findAll({
-      where: { store_id: storeid },
+      where: { store_id: storeid, is_confirmed: false },
       include: [
         {
           model: Products,
@@ -133,7 +133,6 @@ const updateStroeProductConfirmed = async (req, res) => {
 
   transaction = await sequelize.transaction();
 
-  console.log(req.body);
   try {
     const [updated] = await DummyStoreProducts.update(
       {
@@ -141,8 +140,9 @@ const updateStroeProductConfirmed = async (req, res) => {
         remarks_quantity,
         status,
         confirmed_on,
+        is_confirmed: true,
       },
-      { where: { id }, transaction }
+      { where: { id: id }, transaction }
     );
 
     if (updated === 0) {
@@ -152,8 +152,6 @@ const updateStroeProductConfirmed = async (req, res) => {
     const isExistingItem = await StoreProducts.findOne({
       where: { product_id: product_id, store_id: store_id },
     });
-
-    console.log(isExistingItem);
 
     if (isExistingItem) {
       isExistingItem.quantity = Number(isExistingItem.quantity) + Number(quantity);
@@ -176,4 +174,44 @@ const updateStroeProductConfirmed = async (req, res) => {
   }
 };
 
-module.exports = { addProductsToStore, getStoreProductDetails, updateStroeProductChecked, updateStroeProductConfirmed };
+const getStoreProductDetails = async (req, res) => {
+  const { Products, Stores, StoreProducts } = await connectToDatabase();
+  const { storeid } = req.params;
+  console.log(storeid);
+  try {
+    const storeData = await StoreProducts.findAll({
+      where: { store_id: storeid },
+      include: [
+        {
+          model: Products,
+        },
+        {
+          model: Stores,
+        },
+      ],
+      raw: true,
+      nest: true,
+      order: [["added_on", "DESC"]],
+    });
+
+    if (!storeData || storeData.length === 0) {
+      return res.status(400).json({ message: "No data found" });
+    }
+
+    return res.status(200).json({ data: storeData });
+  } catch (error) {
+    console.error("Error :", error);
+    return res.status(500).json({
+      message: "Failed to fetch store",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  addProductsToStore,
+  getDummyStoreProductDetails,
+  updateStroeProductChecked,
+  updateStroeProductConfirmed,
+  getStoreProductDetails,
+};

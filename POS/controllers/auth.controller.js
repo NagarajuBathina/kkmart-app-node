@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const connectToDatabase = require("../../misc/db");
 
-const { Op } = require("sequelize");
+const { Op,fn,col } = require("sequelize");
 
 const login = async (req, res) => {
   try {
@@ -149,7 +149,7 @@ const signup = async (req, res) => {
 // };
 
 const getDashboardStats = async (req, res) => {
-  const { Order, Product, Category, User, Supplier, Brand, Customer, OrderItem, sequelizeDatabase } =
+  const { Orders, Products, Category, User, Supplier, Brand, Customer, OrderItem, sequelizeDatabase } =
     await connectToDatabase();
 
   try {
@@ -157,24 +157,24 @@ const getDashboardStats = async (req, res) => {
       // Base stats
       {
         // Sales Stats
-        totalSales: (await Order.sum("total_amount")) || 0,
-        totalOrders: await Order.count(),
+        totalSales: (await Orders.sum("total_amount")) || 0,
+        totalOrders: await Orders.count(),
         dailySales:
-          (await Order.sum("total_amount", {
+          (await Orders.sum("total_amount", {
             where: sequelizeDatabase.where(
-              sequelizeDatabase.fn("DATE", sequelizeDatabase.col("order_date")),
-              sequelizeDatabase.fn("CURDATE")
+              fn("DATE", sequelizeDatabase.col("order_date")),
+              fn("CURDATE")
             ),
           })) || 0,
         weeklySales:
-          (await Order.sum("total_amount", {
+          (await Orders.sum("total_amount", {
             where: sequelizeDatabase.where(
               sequelizeDatabase.fn("YEARWEEK", sequelizeDatabase.col("order_date")),
               sequelizeDatabase.fn("YEARWEEK", sequelizeDatabase.fn("CURDATE"))
             ),
           })) || 0,
         monthlySales:
-          (await Order.sum("total_amount", {
+          (await Orders.sum("total_amount", {
             where: sequelizeDatabase.where(
               sequelizeDatabase.fn("MONTH", sequelizeDatabase.col("order_date")),
               sequelizeDatabase.fn("MONTH", sequelizeDatabase.fn("CURDATE"))
@@ -182,14 +182,14 @@ const getDashboardStats = async (req, res) => {
           })) || 0,
 
         // Inventory Stats
-        totalProducts: await Product.count({ where: { is_active: true } }),
-        lowStockProducts: await Product.count({
+        totalProducts: await Products.count({ where: { is_active: true } }),
+        lowStockProducts: await Products.count({
           where: sequelizeDatabase.literal("quantity <= qty_alert"),
         }),
-        outOfStockProducts: await Product.count({
+        outOfStockProducts: await Products.count({
           where: { quantity: 0, is_active: true },
         }),
-        criticalStock: await Product.count({
+        criticalStock: await Products.count({
           where: sequelizeDatabase.literal("quantity <= FLOOR(qty_alert * 0.5)"),
         }),
 
@@ -212,7 +212,7 @@ const getDashboardStats = async (req, res) => {
       },
 
       // Recent Transactions (last 5 orders)
-      Order.findAll({
+      Orders.findAll({
         order: [["order_date", "DESC"]],
         limit: 5,
         attributes: ["orders_id", "order_date", "total_amount", "payment_method"],
@@ -235,13 +235,13 @@ const getDashboardStats = async (req, res) => {
         limit: 5,
         include: [
           {
-            model: Product,
+            model: Products,
             attributes: ["products_name", "barcode"],
           },
         ],
       }),
-      getSalesByCategory(Order, OrderItem, Product, Category, sequelizeDatabase),
-      getSalesByPaymentMethod(Order, sequelizeDatabase),
+      getSalesByCategory(Orders, OrderItem, Products, Category, sequelizeDatabase),
+      getSalesByPaymentMethod(Orders, sequelizeDatabase),
     ]);
 
     // Transform recent transactions

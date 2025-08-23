@@ -51,6 +51,10 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
         allowNull: true,
       },
+      is_confirmed: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
     },
     {
       timestamps: false,
