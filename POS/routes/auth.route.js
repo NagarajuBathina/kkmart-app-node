@@ -1,6 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { login, signup, getDashboardStats } = require("../controllers/auth.controller");
+const {
+  login,
+  signup,
+  getDashboardStats,
+  getDashboardStatastics,
+  getStoreDashboardStatastics,
+} = require("../controllers/auth.controller");
 const { authenticateToken, authorizeRole } = require("../../middleware/auth_middleware");
 
 // Public routes
@@ -13,5 +19,7 @@ router.get("/test_auth", authenticateToken, (req, res) => {
   });
 });
 router.get("/dashboard_stats", getDashboardStats);
+router.get("/get_dashboard_statastics", getDashboardStatastics);
+router.get("/get_store_dashboard_statastics/:storeid", getStoreDashboardStatastics);
 
 module.exports = router;

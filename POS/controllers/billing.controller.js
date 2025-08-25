@@ -222,7 +222,6 @@ const disturbuteEarnings = async (transaction, customer_joined_by, customer_id, 
   if (currentMonthTotalOrdersAmount < 2000 && currentMonthAmountAndCurrenOrderAmount >= 2000) {
     while (joinedBy) {
       const joinedBydata = await fetchJoinedByData(joinedBy);
-      console.log(joinedBydata);
       let monthlyEarnings;
       switch (joinedBydata.role) {
         case "jma":

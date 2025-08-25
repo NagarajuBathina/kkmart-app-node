@@ -2,7 +2,6 @@ const connectToDatabase = require("../../misc/db");
 
 // Create a new unit
 const createUnit = async (req, res) => {
-  console.log(req.body);
   try {
     const { Unit } = await connectToDatabase();
     if (!req.body.unit) {

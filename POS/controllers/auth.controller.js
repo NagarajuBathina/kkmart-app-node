@@ -1,8 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const { Op, fn, col, literal, where } = require("sequelize");
 const connectToDatabase = require("../../misc/db");
-
-const { Op,fn,col } = require("sequelize");
 
 const login = async (req, res) => {
   try {
@@ -98,59 +97,81 @@ const signup = async (req, res) => {
   }
 };
 
-// const getDashboardStats = async (req, res) => {
-//   const {
-//     Order,
-//     Product,
-//     Category,
-//     User,
-//     Supplier,
-//     Brand,
-//     Customer,
-//     sequelizeDatabase
-//   } = await connectToDatabase();
+const getDashboardStatastics = async (req, res) => {
+  const { Orders, Products, Category, Users, Supplier, Brand, Customer, Stores, sequelize } = await connectToDatabase();
 
-//   const stats = {
-//     // Sales Stats
-//     totalSales: await Order.sum('total_amount'),
-//     totalOrders: await Order.count(),
+  try {
+    const stats = {
+      // Sales Stats
+      totalSales: await Orders.sum("total_amount"),
+      totalOrders: await Orders.count(),
 
-//     // Inventory Stats
-//     totalProducts: await Product.count({
-//       where: { is_active: true }
-//     }),
-//     lowStockProducts: await Product.count({
-//       where: sequelizeDatabase.literal('quantity <= qty_alert')
-//     }),
+      // stores stats
+      totalStores: await Stores.count(),
 
-//     // User Stats
-//     totalCustomers: await Customer.count({
-//       where: { is_active: true }
-//     }),
-//     totalUsers: await User.count(),
+      // brands stats
+      totalBrands: await Brand.count(),
 
-//     // Category Stats
-//     categoriesCount: await Category.count({
-//       where: { is_active: true }
-//     }),
+      // Inventory Stats
+      totalProducts: await Products.count({
+        where: { is_active: true },
+      }),
+      lowStockProducts: await Products.count({
+        where: sequelize.literal("quantity <= qty_alert"),
+      }),
 
-//     // Brand Stats
-//     brandsCount: await Brand.count({
-//       where: { is_active: true }
-//     }),
+      outOfStockProducts: await Products.count({
+        where: {
+          quantity: {
+            [Op.eq]: 0,
+          },
+        },
+      }),
 
-//     // Supplier Stats
-//     suppliersCount: await Supplier.count({
-//       where: { is_active: true }
-//     })
-//   };
+      // User Stats
+      totalCustomers: await Customer.count(),
+      totalUsers: await Users.count(),
 
-//   return res.status(200).json(stats);
-// };
+      // Category Stats
+      categoriesCount: await Category.count({
+        where: { is_active: true },
+      }),
+
+      // Brand Stats
+      brandsCount: await Brand.count({
+        where: { is_active: true },
+      }),
+
+      // Supplier Stats
+      suppliersCount: await Supplier.count({
+        where: { is_active: true },
+      }),
+
+      //  Today's sales
+      todaySales: await Orders.sum("total_amount", {
+        where: where(fn("DATE", col("order_date")), fn("CURDATE")),
+      }),
+
+      // This week's sales
+      weekSales: await Orders.sum("total_amount", {
+        where: where(fn("YEARWEEK", col("order_date")), fn("YEARWEEK", fn("CURDATE"))),
+      }),
+
+      //  This month's sales
+      monthSales: await Orders.sum("total_amount", {
+        where: where(fn("MONTH", col("order_date")), fn("MONTH", fn("CURDATE"))),
+      }),
+    };
+
+    return res.status(200).json(stats);
+  } catch (error) {
+    return res.status(500).json(error.message);
+  }
+};
 
 const getDashboardStats = async (req, res) => {
-  const { Orders, Products, Category, User, Supplier, Brand, Customer, OrderItem, sequelizeDatabase } =
-    await connectToDatabase();
+  const db = await connectToDatabase();
+  const { Orders, Products, Category, Users, Supplier, Brand, OrderItems, Customer, sequelize } = db;
 
   try {
     const [stats, recentTransactions, topProducts, salesByCategory, paymentMethods] = await Promise.all([
@@ -161,42 +182,39 @@ const getDashboardStats = async (req, res) => {
         totalOrders: await Orders.count(),
         dailySales:
           (await Orders.sum("total_amount", {
-            where: sequelizeDatabase.where(
-              fn("DATE", sequelizeDatabase.col("order_date")),
-              fn("CURDATE")
-            ),
+            where: sequelize.where(fn("DATE", sequelize.col("order_date")), fn("CURDATE")),
           })) || 0,
         weeklySales:
           (await Orders.sum("total_amount", {
-            where: sequelizeDatabase.where(
-              sequelizeDatabase.fn("YEARWEEK", sequelizeDatabase.col("order_date")),
-              sequelizeDatabase.fn("YEARWEEK", sequelizeDatabase.fn("CURDATE"))
+            where: sequelize.where(
+              sequelize.fn("YEARWEEK", sequelize.col("order_date")),
+              sequelize.fn("YEARWEEK", sequelize.fn("CURDATE"))
             ),
           })) || 0,
         monthlySales:
           (await Orders.sum("total_amount", {
-            where: sequelizeDatabase.where(
-              sequelizeDatabase.fn("MONTH", sequelizeDatabase.col("order_date")),
-              sequelizeDatabase.fn("MONTH", sequelizeDatabase.fn("CURDATE"))
+            where: sequelize.where(
+              sequelize.fn("MONTH", sequelize.col("order_date")),
+              sequelize.fn("MONTH", sequelize.fn("CURDATE"))
             ),
           })) || 0,
 
         // Inventory Stats
         totalProducts: await Products.count({ where: { is_active: true } }),
         lowStockProducts: await Products.count({
-          where: sequelizeDatabase.literal("quantity <= qty_alert"),
+          where: sequelize.literal("quantity <= qty_alert"),
         }),
         outOfStockProducts: await Products.count({
           where: { quantity: 0, is_active: true },
         }),
         criticalStock: await Products.count({
-          where: sequelizeDatabase.literal("quantity <= FLOOR(qty_alert * 0.5)"),
+          where: sequelize.literal("quantity <= FLOOR(qty_alert * 0.5)"),
         }),
 
         // User Stats
         totalCustomers: await Customer.count(),
-        totalUsers: await User.count(),
-        activeUsers: await User.count({ where: { is_active: true } }),
+        totalUsers: await Users.count(),
+        activeUsers: await Users.count({ where: { is_active: true } }),
 
         // Category Stats
         categoriesCount: await Category.count(),
@@ -219,19 +237,16 @@ const getDashboardStats = async (req, res) => {
         include: [
           {
             model: Customer,
-            attributes: ["customer_name"],
+            attributes: ["name"],
           },
         ],
       }),
 
       // Top Selling Products
-      OrderItem.findAll({
-        attributes: [
-          "product_id",
-          [sequelizeDatabase.fn("SUM", sequelizeDatabase.col("order_items.quantity")), "total_sold"],
-        ],
+      OrderItems.findAll({
+        attributes: ["product_id", [sequelize.fn("SUM", sequelize.col("pos_order_items.quantity")), "total_sold"]],
         group: ["product_id"],
-        order: [[sequelizeDatabase.literal("total_sold"), "DESC"]],
+        order: [[sequelize.literal("total_sold"), "DESC"]],
         limit: 5,
         include: [
           {
@@ -240,8 +255,8 @@ const getDashboardStats = async (req, res) => {
           },
         ],
       }),
-      getSalesByCategory(Orders, OrderItem, Products, Category, sequelizeDatabase),
-      getSalesByPaymentMethod(Orders, sequelizeDatabase),
+      getSalesByCategory(Orders, OrderItems, Products, Category, sequelize),
+      getSalesByPaymentMethod(Orders, sequelize),
     ]);
 
     // Transform recent transactions
@@ -265,11 +280,11 @@ const getDashboardStats = async (req, res) => {
       ...stats,
       recentTransactions: transformedTransactions,
       topProducts: transformedTopProducts,
-      salesTrend: await getSalesTrend(Order, sequelizeDatabase),
+      salesTrend: await getSalesTrend(Orders, sequelize),
       charts: {
         salesByCategory,
         salesByPaymentMethod: paymentMethods,
-        dailySalesGraph: await getSalesTrend(Order, sequelizeDatabase),
+        dailySalesGraph: await getSalesTrend(Orders, sequelize),
       },
     });
   } catch (error) {
@@ -282,8 +297,8 @@ const getDashboardStats = async (req, res) => {
 };
 
 // Helper function for sales trend (last 7 days)
-async function getSalesTrend(Order, sequelize) {
-  const results = await Order.findAll({
+async function getSalesTrend(Orders, sequelize) {
+  const results = await Orders.findAll({
     attributes: [
       [sequelize.fn("DATE", sequelize.col("order_date")), "date"],
       [sequelize.fn("SUM", sequelize.col("total_amount")), "total"],
@@ -305,17 +320,14 @@ async function getSalesTrend(Order, sequelize) {
 }
 
 // Helper function for sales by category
-async function getSalesByCategory(Order, OrderItem, Product, Category, sequelizeDatabase) {
-  const results = await OrderItem.findAll({
+async function getSalesByCategory(Orders, OrderItems, Products, Category, sequelize) {
+  const results = await OrderItems.findAll({
     attributes: [
-      [
-        sequelizeDatabase.fn("SUM", sequelizeDatabase.literal("order_items.quantity * order_items.price")),
-        "total_sales",
-      ],
+      [sequelize.fn("SUM", sequelize.literal("pos_order_items.quantity * pos_order_items.price")), "total_sales"],
     ],
     include: [
       {
-        model: Product,
+        model: Products,
         attributes: [],
         include: [
           {
@@ -336,9 +348,9 @@ async function getSalesByCategory(Order, OrderItem, Product, Category, sequelize
 }
 
 // Helper function for payment method breakdown
-async function getSalesByPaymentMethod(Order, sequelizeDatabase) {
-  const results = await Order.findAll({
-    attributes: ["payment_method", [sequelizeDatabase.fn("SUM", sequelizeDatabase.col("total_amount")), "total_sales"]],
+async function getSalesByPaymentMethod(Orders, sequelize) {
+  const results = await Orders.findAll({
+    attributes: ["payment_method", [sequelize.fn("SUM", sequelize.col("total_amount")), "total_sales"]],
     group: ["payment_method"],
     raw: true,
   });
@@ -349,8 +361,62 @@ async function getSalesByPaymentMethod(Order, sequelizeDatabase) {
   }));
 }
 
+const getStoreDashboardStatastics = async (req, res) => {
+  const { Orders, StoreProducts, Brand, Stores, sequelize } = await connectToDatabase();
+  const { storeid } = req.params;
+  try {
+    const stats = {
+      // Sales Stats
+      totalSales: await Orders.sum("total_amount", { where: { store_id: storeid } }),
+      totalOrders: await Orders.count({ where: { store_id: storeid } }),
+
+      // stores stats
+      totalStores: await Stores.count({ where: { store_id: storeid } }),
+
+      // Inventory Stats
+      totalProducts: await StoreProducts.count({ where: { store_id: storeid } }),
+
+      outOfStockProducts: await StoreProducts.count({
+        where: {
+          quantity: {
+            [Op.eq]: 0,
+          },
+          store_id: storeid,
+        },
+      }),
+
+      //  Today's sales
+      todaySales: await Orders.sum("total_amount", {
+        where: {
+          [Op.and]: [where(fn("DATE", col("order_date")), fn("CURDATE")), { store_id: storeid }],
+        },
+      }),
+
+      // This week's sales
+      weekSales: await Orders.sum("total_amount", {
+        where: {
+          [Op.and]: [where(fn("YEARWEEK", col("order_date")), fn("YEARWEEK", fn("CURDATE"))), { store_id: storeid }],
+        },
+      }),
+
+      //  This month's sales
+      monthSales: await Orders.sum("total_amount", {
+        where: {
+          [Op.and]: [where(fn("MONTH", col("order_date")), fn("MONTH", fn("CURDATE"))), { store_id: storeid }],
+        },
+      }),
+    };
+
+    return res.status(200).json(stats);
+  } catch (error) {
+    return res.status(500).json(error.message);
+  }
+};
+
 module.exports = {
   login,
   signup,
   getDashboardStats,
+  getDashboardStatastics,
+  getStoreDashboardStatastics,
 };

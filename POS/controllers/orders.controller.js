@@ -261,6 +261,7 @@ const getAllOrders = async (req, res) => {
               customerMobile: order.app_customer.phone?.toString(),
             }
           : null,
+        customerPhone: order.customer_phone,
         user_id: order.pos_user?.user_id || null,
         user_name: order.pos_user?.username || null,
         order_id: order.orders_id,

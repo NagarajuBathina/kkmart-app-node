@@ -65,7 +65,6 @@ const addProductsToStore = async (req, res) => {
 const getDummyStoreProductDetails = async (req, res) => {
   const { Products, Stores, DummyStoreProducts } = await connectToDatabase();
   const { storeid } = req.params;
-  console.log(storeid);
   try {
     const storeData = await DummyStoreProducts.findAll({
       where: { store_id: storeid, is_confirmed: false },
@@ -177,7 +176,6 @@ const updateStroeProductConfirmed = async (req, res) => {
 const getStoreProductDetails = async (req, res) => {
   const { Products, Stores, StoreProducts } = await connectToDatabase();
   const { storeid } = req.params;
-  console.log(storeid);
   try {
     const storeData = await StoreProducts.findAll({
       where: { store_id: storeid },
