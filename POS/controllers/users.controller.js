@@ -3,8 +3,25 @@ const { Op, where } = require("sequelize");
 
 const createUser = async (req, res) => {
   const { Users } = await connectToDatabase();
-  const { username } = req.body;
+  const { username, store_id, role } = req.body;
+
   try {
+    const cashierCount = await Users.count({
+      where: { store_id, role: "cashier" },
+    });
+
+    const storeCount = await Users.count({
+      where: { store_id, role: "store" },
+    });
+
+    if (role === "cashier" && cashierCount === 2) {
+      return res.status(400).json({ message: "Store can only have 2 cashiers." });
+    }
+
+    if (role === "store" && storeCount === 1) {
+      return res.status(400).json({ message: "Store can only have 1 store manager." });
+    }
+
     const isUserNameExits = await Users.findOne({ where: { username: username } });
     if (isUserNameExits) {
       return res.status(400).json({ message: "Username already exists.", success: false });

@@ -75,10 +75,12 @@ const signup = async (req, res) => {
       last_login: new Date(),
     });
 
-    // Generate JWT token
-    const token = jwt.sign({ userId: user.user_id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "24h" });
+    const JWT_SECRET = "kkmart.2025.pos.secretkey";
 
-    res.status(201).json({
+    // Generate JWT token
+    const token = jwt.sign({ userId: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
+
+    return res.status(201).json({
       message: "User created successfully",
       token,
       user: {
@@ -90,7 +92,7 @@ const signup = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in signup:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Registration failed",
       error: error.message,
     });

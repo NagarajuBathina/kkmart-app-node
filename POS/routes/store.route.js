@@ -9,3 +9,12 @@ router.get("/get_store_by_id/:store_id", getStoreById);
 router.put("/update_store_by_id/:store_id", updateStoreById);
 
 module.exports = router;
+
+// {
+//   "username":"KKmart Admin",
+//   "password":"Admin",
+//   "email":"admin@gmail.com",
+//   "role":"admin",
+//   "store_id":1000,
+//   "store_code":"lkjad"
+// }

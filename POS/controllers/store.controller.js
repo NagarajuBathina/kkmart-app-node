@@ -14,6 +14,11 @@ const createStore = async (req, res) => {
       });
     }
 
+    const storesCount = await Stores.count();
+    if (storesCount > 11) {
+      return res.status(400).json({ message: "Stores limit crossed" });
+    }
+
     // Check if store already exists using store_name and phone_number
     const existingStore = await Stores.findOne({
       where: {
