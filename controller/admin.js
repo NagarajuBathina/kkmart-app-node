@@ -454,6 +454,29 @@ const deleteBillBoard = async (req, res) => {
   }
 };
 
+const updateEmployeeDeductions = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { phone } = req.params;
+    const { deductions } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ error: "Phone number is required" });
+    }
+
+    const [updated] = await Employee.update({ deductions: deductions }, { where: { phone } });
+
+    if (updated === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    return res.status(200).json({ message: "Updated successfully" });
+  } catch (error) {
+    console.error("Error updating employee details:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   allEmployeesData,
   allMonthlyRenewalsData,
@@ -469,4 +492,5 @@ module.exports = {
   generateRandomPins,
   addBillBoard,
   deleteBillBoard,
+  updateEmployeeDeductions,
 };

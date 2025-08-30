@@ -17,5 +17,6 @@ router.get("/get_sma_jma_customer_details/:refferalCode", controller.getSmaJmaCu
 router.post("/generate_random_pins", controller.generateRandomPins);
 router.post("/upload_billboard", upload.single("billboard"), controller.addBillBoard);
 router.delete("/delete_bill_board_by_id/:slno", controller.deleteBillBoard);
+router.put("/update_employee_deductions/:phone", controller.updateEmployeeDeductions);
 
 module.exports = router;
