@@ -159,16 +159,38 @@ const EmployeeFullDetailsById = async (req, res) => {
   }
 };
 
-const updateEmployeeDetails = async (req, res) => {
+const updateEmployeeBankDetails = async (req, res) => {
   try {
     const { EmployeeBankDetails } = await connectTodb();
-    const { phone } = req.body;
+    const { slno } = req.params;
 
-    if (!phone) {
+    if (!slno) {
       return res.status(400).json({ error: "Phone number is required" });
     }
 
-    const [updated] = await EmployeeBankDetails.update(req.body, { where: { phone } });
+    const [updated] = await EmployeeBankDetails.update(req.body, { where: { slno } });
+
+    if (updated === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    return res.status(200).json({ message: "Updated successfully" });
+  } catch (error) {
+    console.error("Error updating employee details:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+const updateEmployeePersonalDetails = async (req, res) => {
+  try {
+    const { Employee } = await connectTodb();
+    const { slno } = req.params;
+
+    if (!slno) {
+      return res.status(400).json({ error: "slno number is required" });
+    }
+
+    const [updated] = await Employee.update(req.body, { where: { slno } });
 
     if (updated === 0) {
       return res.status(404).json({ error: "Employee not found" });
@@ -484,7 +506,7 @@ module.exports = {
   allWithdrawlsData,
   allEmployeesPaymentsData,
   EmployeeFullDetailsById,
-  updateEmployeeDetails,
+  updateEmployeeBankDetails,
   getDashBoardDetails,
   getDayWiseCustomersCount,
   allRoleWiseEmployeesData,
@@ -493,4 +515,5 @@ module.exports = {
   addBillBoard,
   deleteBillBoard,
   updateEmployeeDeductions,
+  updateEmployeePersonalDetails,
 };
