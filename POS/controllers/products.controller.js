@@ -153,8 +153,22 @@ const addProduct = async (req, res) => {
 
 // get all products
 const getProducts = async (req, res) => {
+  const { page = 1, limit = 10, search = "" } = req.query;
+
+  // Parse page and limit as integers
+  const parsedPage = parseInt(page, 10);
+  const parsedLimit = parseInt(limit, 10);
   try {
     const { Products, Category, Supplier, Brand, Unit, Users } = await connectToDatabase();
+
+    if (isNaN(parsedPage) || isNaN(parsedLimit) || parsedPage <= 0 || parsedLimit <= 0) {
+      return res.status(400).json({
+        message: "Invalid page or limit value. Both must be positive integers.",
+      });
+    }
+
+    const offset = (parsedPage - 1) * parsedLimit;
+
     const products = await Products.findAll({
       where: { is_active: true },
       include: [
@@ -182,6 +196,8 @@ const getProducts = async (req, res) => {
       ],
       raw: true,
       nest: false,
+      limit: parsedLimit,
+      offset,
     });
 
     // Transform the response to flatten the structure
@@ -198,7 +214,7 @@ const getProducts = async (req, res) => {
       shedule: product.shedule || null,
     }));
 
-    return res.status(200).json({ products: transformedProducts });
+    return res.status(200).json({ products: transformedProducts, currentPage: parsedPage, limit: parsedLimit });
   } catch (error) {
     console.error("Error in getProducts:", error);
     return res.status(500).json({

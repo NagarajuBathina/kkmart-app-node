@@ -168,7 +168,7 @@ const updateEmployeeBankDetails = async (req, res) => {
       return res.status(400).json({ error: "Phone number is required" });
     }
 
-    const [updated] = await EmployeeBankDetails.update(req.body, { where: { slno } });
+    const [updated] = await EmployeeBankDetails.update(req.body, { where: { slno: slno } });
 
     if (updated === 0) {
       return res.status(404).json({ error: "Employee not found" });

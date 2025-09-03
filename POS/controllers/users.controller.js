@@ -63,6 +63,7 @@ const getAllUsers = async (req, res) => {
       totalusers: users.count,
       totalPages: Math.ceil(users.count / parsedLimit),
       currentPage: parsedPage,
+      limit: parsedLimit,
     });
   } catch (error) {
     console.error("Error in getAllusers:", error);
