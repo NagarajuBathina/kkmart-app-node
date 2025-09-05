@@ -289,6 +289,111 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+const getLastOrder = async (req, res) => {
+  try {
+    const { Orders, OrderItems, Products, Users, Customer } = await connectToDatabase();
+    const { store_id, user_id } = req.body;
+
+    let whereCondition = {};
+
+    if (store_id && user_id) {
+      whereCondition = {
+        store_id: store_id,
+        user_id: user_id,
+      };
+    } else if (store_id) {
+      whereCondition = { store_id: store_id };
+    }
+
+    const order = await Orders.findOne({
+      where: whereCondition,
+      order: [["order_date", "DESC"]], // Get the latest order
+      include: [
+        {
+          model: OrderItems,
+          attributes: ["product_id", "quantity", "price", "is_combo"],
+          include: [
+            {
+              model: Products,
+              attributes: [
+                "products_name",
+                "barcode",
+                "products_description",
+                "batch_number",
+                "manufacturing_date",
+                "expiry_date",
+                "gst",
+                "brand_id",
+                "unit_id",
+                "shedule",
+              ],
+            },
+          ],
+        },
+        {
+          model: Customer,
+          attributes: ["name", "phone"],
+        },
+        {
+          model: Users,
+          attributes: ["username", "user_id"],
+        },
+      ],
+    });
+
+    if (!order || order.length === 0) {
+      return res.status(400).json({ message: "no orders found" });
+    }
+
+    const orderDate = new Date(order.order_date);
+    const cart = (order.pos_order_items || []).map((item) => ({
+      barcode: item.pos_product?.barcode,
+      name: item.pos_product?.products_name,
+      description: item.pos_product?.products_description || "",
+      price: parseFloat(item.price),
+      quantity: item.quantity,
+      combo_item: item.is_combo,
+      batch_number: item.pos_product?.batch_number,
+      brand_id: item.Product?.brand_id,
+      unit_id: item.Product?.unit_id,
+      gst: parseFloat(item.pos_product?.gst || 0),
+    }));
+
+    return res.status(200).json({
+      message: "Last order fetched successfully",
+      order: {
+        cart,
+        total: parseFloat(order.total_amount),
+        paymentMethod: order.payment_method.toLowerCase(),
+        customerDetails: order.app_customer
+          ? {
+              customerName: order.app_customer.name,
+              customerMobile: order.app_customer.phone?.toString(),
+            }
+          : null,
+        customerPhone: order.customer_phone,
+        user_id: order.pos_user?.user_id || null,
+        user_name: order.pos_user?.username || null,
+        order_id: order.orders_id,
+        order_date: orderDate.toLocaleDateString("en-IN"),
+        invoice_number: `INV-${order.orders_id}`,
+        order_time: orderDate.toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      },
+    });
+  } catch (error) {
+    console.error("Error in getAllOrders:", error);
+    return res.status(500).json({
+      message: "Failed to fetch orders",
+      error: error.message,
+    });
+  }
+};
+
 // get sales list
 const getSalesList = async (req, res) => {
   try {
@@ -415,4 +520,5 @@ module.exports = {
   getAllOrders,
   getSalesList,
   getSalesDetailsById,
+  getLastOrder,
 };

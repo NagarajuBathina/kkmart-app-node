@@ -187,7 +187,7 @@ const billing = async (req, res) => {
     }
 
     await transaction.commit();
-    return res.status(200).json({ message: "purchased successfully", success: true });
+    return res.status(200).json({ message: "purchased successfully", success: true, invoiceNumber: `INV-${orderId}` });
   } catch (error) {
     if (transaction && !transaction.finished) {
       await transaction.rollback();
@@ -311,7 +311,7 @@ const checkCustomerPurchasing = async (req, res) => {
       return res.status(200).json({
         data: customerData,
         message: "No combo purchased",
-        is_purchased_combo: true,
+        is_purchased_combo: false,
       });
     }
   } catch (e) {

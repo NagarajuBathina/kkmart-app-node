@@ -155,7 +155,6 @@ const updateStoreById = async (req, res) => {
     let phone = req.body.phone || "";
 
     if (name || phone) {
-      console.log("called");
       const existingStore = await Stores.findOne({
         where: {
           [Op.or]: [{ name }, { phone }],
@@ -171,14 +170,14 @@ const updateStoreById = async (req, res) => {
     }
 
     // Update store
-    await Stores.update({ ...req.body }, { where: { store_id } });
+    await Stores.update(req.body, { where: { store_id } });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Store updated successfully",
     });
   } catch (error) {
     console.error("Error in updateStoreById:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to update store",
       error: error.message,
     });
