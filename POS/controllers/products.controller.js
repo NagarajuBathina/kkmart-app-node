@@ -158,6 +158,7 @@ const getProducts = async (req, res) => {
   // Parse page and limit as integers
   const parsedPage = parseInt(page, 10);
   const parsedLimit = parseInt(limit, 10);
+
   try {
     const { Products, Category, Supplier, Brand, Unit, Users } = await connectToDatabase();
 
@@ -169,7 +170,7 @@ const getProducts = async (req, res) => {
 
     const offset = (parsedPage - 1) * parsedLimit;
 
-    const products = await Products.findAll({
+    const { rows: products, count: totalProducts } = await Products.findAndCountAll({
       where: { is_active: true },
       include: [
         {
@@ -214,7 +215,15 @@ const getProducts = async (req, res) => {
       shedule: product.shedule || null,
     }));
 
-    return res.status(200).json({ products: transformedProducts, currentPage: parsedPage, limit: parsedLimit });
+    return res.status(200).json({
+      products: transformedProducts,
+      pagenation: {
+        currentPage: parsedPage,
+        limit: parsedLimit,
+        totalProducts,
+        totalPages: Math.ceil(totalProducts / parsedLimit),
+      },
+    });
   } catch (error) {
     console.error("Error in getProducts:", error);
     return res.status(500).json({
