@@ -682,15 +682,15 @@ const searchProducts = async (req, res) => {
       include: [
         {
           model: Category,
-          attributes: ["category"],
+          attributes: ["category", "category_id"],
         },
-        {
-          model: Supplier,
-          attributes: ["suppliers_name"],
-        },
+        // {
+        //   model: Supplier,
+        //   attributes: ["suppliers_name", "suppliers_id"],
+        // },
         {
           model: Brand,
-          attributes: ["brand"],
+          attributes: ["brand", "brand_id"],
         },
       ],
       raw: true,
@@ -706,7 +706,7 @@ const searchProducts = async (req, res) => {
       discount_price: parseFloat(product.discount_price),
       barcode: product.barcode,
       quantity: product.quantity,
-      unit: product.unit,
+      unit_id: product.unit_id,
       batch_number: product.batch_number,
       manufacturing_date: product.manufacturing_date,
       expiry_date: product.expiry_date,
@@ -716,8 +716,12 @@ const searchProducts = async (req, res) => {
       brand: product.brand,
       status: product.status,
       categories_name: product["category.category"],
-      suppliers_name: product["supplier.suppliers_name"],
+      // suppliers_name: product["suppliers_name"],
+      category_id: product["category_id"],
+      // supplier_id: product["suppliers_id"],
+      brand_id: product["brand_id"],
       created_on: product.created_on,
+      gst: product.gst,
     }));
 
     return res.status(200).json({
